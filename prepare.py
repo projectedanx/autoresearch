@@ -245,10 +245,14 @@ class Tokenizer:
         return self.enc.decode(ids)
 
 
+_token_bytes_cache = {}
+
 def get_token_bytes(device="cpu"):
     path = os.path.join(TOKENIZER_DIR, "token_bytes.pt")
-    with open(path, "rb") as f:
-        return torch.load(f, map_location=device)
+    if device not in _token_bytes_cache:
+        with open(path, "rb") as f:
+            _token_bytes_cache[device] = torch.load(f, map_location=device)
+    return _token_bytes_cache[device]
 
 
 def _document_batches(split, tokenizer_batch_size=128):
