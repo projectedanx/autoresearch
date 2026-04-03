@@ -327,14 +327,20 @@ def make_dataloader(tokenizer, B, T, split, buffer_size=1000):
 
                 remaining = row_capacity - pos
 
-                # Find largest doc that fits entirely
+                # Find largest doc that fits entirely, and track shortest doc
                 best_idx = -1
                 best_len = 0
+                shortest_idx = -1
+                shortest_len = float('inf')
+
                 for i, doc in enumerate(doc_buffer):
                     doc_len = len(doc)
                     if doc_len <= remaining and doc_len > best_len:
                         best_idx = i
                         best_len = doc_len
+                    if doc_len < shortest_len:
+                        shortest_idx = i
+                        shortest_len = doc_len
 
                 if best_idx >= 0:
                     doc = doc_buffer.pop(best_idx)
@@ -342,7 +348,6 @@ def make_dataloader(tokenizer, B, T, split, buffer_size=1000):
                     pos += len(doc)
                 else:
                     # No doc fits — crop shortest to fill remaining
-                    shortest_idx = min(range(len(doc_buffer)), key=lambda i: len(doc_buffer[i]))
                     doc = doc_buffer.pop(shortest_idx)
                     row_buffer[row_idx, pos:pos + remaining] = torch.tensor(doc[:remaining], dtype=torch.long)
                     pos += remaining
