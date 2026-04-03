@@ -1,0 +1,92 @@
+# D1: inference-deployment.yaml
+# Digest-pinned, HPA-configured, PSI-annotated
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-inference-v2-4-1
+  labels:
+    app: model-inference
+    version: "2.4.1"
+    scar-compliance: "R5-R6-R11"
+  annotations:
+    deployment.kubernetes.io/revision: "3"
+    architect-k.scos/psi-monitor: "enabled"
+    architect-k.scos/rollback-trigger: "error_rate > 0.05 || latency_p99 > 250ms"
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: model-inference
+  template:
+    metadata:
+      labels:
+        app: model-inference
+        version: "2.4.1"
+    spec:
+      containers:
+      - name: inference-server
+        # RULE R5: SHA256 digest pin — no :latest
+        image: registry.corp.io/ml/inference-server@sha256:7f3a9d2c1b4e8f0a...
+        ports:
+        - containerPort: 8080
+        env:
+        - name: MODEL_VERSION
+          value: "2.4.1"
+        # RULE R2: Credentials from Secret — never hardcoded
+        - name: MLFLOW_TRACKING_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: mlflow-credentials
+              key: tracking-token
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2"
+            nvidia.com/gpu: "1"
+          limits:
+            memory: "8Gi"
+            cpu: "4"
+            nvidia.com/gpu: "1"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: model-inference-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: model-inference-v2-4-1
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Pods
+    pods:
+      metric:
+        name: inference_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "100"
