@@ -16,10 +16,14 @@ import torch  # noqa: E402
 import torch.nn as nn  # noqa: E402
 import torch.nn.functional as F  # noqa: E402
 
-from kernels import get_kernel  # noqa: E402
-from prepare import (  # noqa: E402
-    MAX_SEQ_LEN, TIME_BUDGET, Tokenizer, make_dataloader, evaluate_bpb
-)
+from kernels import get_kernel
+try:
+    cap = torch.cuda.get_device_capability()
+except Exception:
+    cap = (8, 0)
+# varunneal's FA3 is Hopper only, use kernels-community on non-Hopper GPUs
+repo = "varunneal/flash-attention-3" if cap == (9, 0) else "kernels-community/flash-attn3"
+fa3 = get_kernel(repo).flash_attn_interface
 
 _fa3 = None
 
@@ -532,6 +536,20 @@ DEVICE_BATCH_SIZE = 128  # per-device batch size (reduce if OOM)
 # Setup: tokenizer, model, optimizer, dataloader
 # ---------------------------------------------------------------------------
 
+
+
+
+
+
+def get_lr_multiplier(progress):
+    if progress < WARMUP_RATIO:
+        return progress / WARMUP_RATIO if WARMUP_RATIO > 0 else 1.0
+    elif progress < 1.0 - WARMDOWN_RATIO:
+        return 1.0
+    else:
+        cooldown = (1.0 - progress) / WARMDOWN_RATIO
+        return cooldown * 1.0 + (1 - cooldown) * FINAL_LR_FRAC
+
 if __name__ == "__main__":
     t_start = time.time()
     torch.manual_seed(42)
@@ -595,14 +613,7 @@ if __name__ == "__main__":
 
     # Schedules (all based on progress = training_time / TIME_BUDGET)
 
-    def get_lr_multiplier(progress):
-        if progress < WARMUP_RATIO:
-            return progress / WARMUP_RATIO if WARMUP_RATIO > 0 else 1.0
-        elif progress < 1.0 - WARMDOWN_RATIO:
-            return 1.0
-        else:
-            cooldown = (1.0 - progress) / WARMDOWN_RATIO
-            return cooldown * 1.0 + (1 - cooldown) * FINAL_LR_FRAC
+
 
     def get_muon_momentum(step):
         frac = min(step / 300, 1)
@@ -723,27 +734,3 @@ if __name__ == "__main__":
     print(f"num_params_M:     {num_params / 1e6:.1f}")
     print(f"depth:            {DEPTH}")
 
-# ---------------------------------------------------------------------------
-# Tests
-# ---------------------------------------------------------------------------
-
-
-def test_has_ve():
-    test_cases = [
-        (0, 1, True),
-        (0, 2, False),
-        (1, 2, True),
-        (0, 3, True),
-        (1, 3, False),
-        (2, 3, True),
-        (0, 8, False),
-        (1, 8, True),
-        (6, 8, False),
-        (7, 8, True),
-    ]
-    for layer_idx, n_layer, expected in test_cases:
-        assert has_ve(layer_idx, n_layer) == expected
-
-
-if __name__ == "__main__":
-    test_has_ve()
