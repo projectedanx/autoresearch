@@ -474,7 +474,6 @@ COPY --from=builder /usr/local/lib/python3.11 /usr/local/lib/python3.11
 COPY --from=builder /build/src ./src
 COPY --from=builder /build/configs ./configs
 
-RUN chown -R mluser:mluser /app
 USER mluser
 
 # RULE R8: Reproducibility seed enforced at runtime via ENV
