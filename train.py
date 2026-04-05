@@ -4,25 +4,40 @@ Cherry-picked and simplified from nanochat.
 Usage: uv run train.py
 """
 
+import gc
+import math
 import os
+import random
+import time
+from dataclasses import asdict, dataclass
+
 os.environ["PYTORCH_ALLOC_CONF"] = "expandable_segments:True"
 os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
 
-import gc
-import time
-from dataclasses import dataclass, asdict
-
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from kernels import get_kernel
-cap = torch.cuda.get_device_capability()
-# varunneal's FA3 is Hopper only, use kernels-community on non-Hopper GPUs
-repo = "varunneal/flash-attention-3" if cap == (9, 0) else "kernels-community/flash-attn3"
-fa3 = get_kernel(repo).flash_attn_interface
 
-from prepare import MAX_SEQ_LEN, TIME_BUDGET, Tokenizer, make_dataloader, evaluate_bpb
+from kernels import get_kernel
+
+fa3 = None
+
+
+def get_fa3_interface():
+    global fa3
+    if fa3 is None:
+        cap = torch.cuda.get_device_capability()
+        # varunneal's FA3 is Hopper only, use kernels-community on non-Hopper GPUs
+        repo = ("varunneal/flash-attention-3"
+                if cap == (9, 0) else "kernels-community/flash-attn3")
+        fa3 = get_kernel(repo).flash_attn_interface
+    return fa3
+
+from prepare import (MAX_SEQ_LEN, TIME_BUDGET, Tokenizer,
+                     make_dataloader, evaluate_bpb)
+
 
 # ---------------------------------------------------------------------------
 # GPT Model
@@ -89,7 +104,8 @@ class CausalSelfAttention(nn.Module):
         q, k = apply_rotary_emb(q, cos, sin), apply_rotary_emb(k, cos, sin)
         q, k = norm(q), norm(k)
 
-        y = fa3.flash_attn_func(q, k, v, causal=True, window_size=window_size)
+        fa3_interface = get_fa3_interface()
+        y = fa3_interface.flash_attn_func(q, k, v, causal=True, window_size=window_size)
         y = y.contiguous().view(B, T, -1)
         y = self.c_proj(y)
         return y
@@ -453,10 +469,14 @@ DEVICE_BATCH_SIZE = 128  # per-device batch size (reduce if OOM)
 # Setup: tokenizer, model, optimizer, dataloader
 # ---------------------------------------------------------------------------
 
+
 if __name__ == "__main__":
     t_start = time.time()
     torch.manual_seed(42)
     torch.cuda.manual_seed(42)
+    np.random.seed(42)
+    random.seed(42)
+    torch.backends.cudnn.deterministic = True
     torch.set_float32_matmul_precision("high")
     device = torch.device("cuda")
     autocast_ctx = torch.amp.autocast(device_type="cuda", dtype=torch.bfloat16)
@@ -513,6 +533,25 @@ if __name__ == "__main__":
     print(f"Time budget: {TIME_BUDGET}s")
     print(f"Gradient accumulation steps: {grad_accum_steps}")
 
+    # RULE R9: Effective Batch Size Assertion
+    effective_bs = DEVICE_BATCH_SIZE * grad_accum_steps
+    gpu_vram_gb = torch.cuda.get_device_properties(device).total_memory / 1e9
+    dtype_bytes = 2  # bfloat16
+    vram_limit = int(gpu_vram_gb * 1e9 * 0.75 / dtype_bytes)
+    if effective_bs > vram_limit:
+        print(f"RULE_R9_WARN: effective_batch_size={effective_bs} exceeds 75% VRAM budget ({vram_limit} elements). Risk: OOM at epoch boundary. [SCA-0103]")
+    else:
+        print(f"Effective batch size: {effective_bs}")
+
+    # RULE R7: GPU Memory Profiling
+    def log_gpu_memory(step_name: str) -> None:
+        if torch.cuda.is_available():
+            allocated = torch.cuda.memory_allocated() / 1e9
+            reserved = torch.cuda.memory_reserved() / 1e9
+            print(f"[{step_name}] GPU mem — allocated: {allocated:.2f}GB | reserved: {reserved:.2f}GB")
+
+    log_gpu_memory("pre_training")
+
     # Schedules (all based on progress = training_time / TIME_BUDGET)
 
     def get_lr_multiplier(progress):
@@ -567,13 +606,16 @@ if __name__ == "__main__":
         train_loss_f = train_loss.item()
 
         # Fast fail: abort if loss is exploding
-        if train_loss_f > 100:
+        if math.isnan(train_loss_f) or train_loss_f > 100:
             print("FAIL")
             exit(1)
 
         torch.cuda.synchronize()
         t1 = time.time()
         dt = t1 - t0
+
+        if step == 0 or (step + 1) % 100 == 0:
+            log_gpu_memory(f"step_{step}")
 
         if step > 10:
             total_training_time += dt
