@@ -301,16 +301,31 @@ polar_express_coeffs = [
     (2.3465413258596377, -1.7097828382687081, 0.42323551169305323),
 ]
 
+
+@dataclass
+class AdamWState:
+    p: torch.Tensor
+    grad: torch.Tensor
+    exp_avg: torch.Tensor
+    exp_avg_sq: torch.Tensor
+
+import torch.utils._pytree as pytree
+pytree.register_pytree_node(
+    AdamWState,
+    lambda x: ([x.p, x.grad, x.exp_avg, x.exp_avg_sq], None),
+    lambda values, context: AdamWState(*values)
+)
+
 @torch.compile(dynamic=False, fullgraph=True)
-def adamw_step_fused(p, grad, exp_avg, exp_avg_sq, step_t, lr_t, beta1_t, beta2_t, eps_t, wd_t):
-    p.mul_(1 - lr_t * wd_t)
-    exp_avg.lerp_(grad, 1 - beta1_t)
-    exp_avg_sq.lerp_(grad.square(), 1 - beta2_t)
+def adamw_step_fused(state: AdamWState, step_t, lr_t, beta1_t, beta2_t, eps_t, wd_t):
+    state.p.mul_(1 - lr_t * wd_t)
+    state.exp_avg.lerp_(state.grad, 1 - beta1_t)
+    state.exp_avg_sq.lerp_(state.grad.square(), 1 - beta2_t)
     bias1 = 1 - beta1_t ** step_t
     bias2 = 1 - beta2_t ** step_t
-    denom = (exp_avg_sq / bias2).sqrt() + eps_t
+    denom = (state.exp_avg_sq / bias2).sqrt() + eps_t
     step_size = lr_t / bias1
-    p.add_(exp_avg / denom, alpha=-step_size)
+    state.p.add_(state.exp_avg / denom, alpha=-step_size)
 
 @torch.compile(dynamic=False, fullgraph=True)
 def muon_step_fused(stacked_grads, stacked_params, momentum_buffer, second_momentum_buffer,
@@ -386,7 +401,8 @@ class MuonAdamW(torch.optim.Optimizer):
             self._adamw_beta2_t.fill_(group['betas'][1])
             self._adamw_eps_t.fill_(group['eps'])
             self._adamw_wd_t.fill_(group['weight_decay'])
-            adamw_step_fused(p, grad, state['exp_avg'], state['exp_avg_sq'],
+            adamw_state = AdamWState(p, grad, state['exp_avg'], state['exp_avg_sq'])
+            adamw_step_fused(adamw_state,
                             self._adamw_step_t, self._adamw_lr_t, self._adamw_beta1_t,
                             self._adamw_beta2_t, self._adamw_eps_t, self._adamw_wd_t)
 
