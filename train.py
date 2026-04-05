@@ -17,7 +17,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from kernels import get_kernel
-cap = torch.cuda.get_device_capability()
+try:
+    cap = torch.cuda.get_device_capability()
+except Exception:
+    cap = (8, 0)
 # varunneal's FA3 is Hopper only, use kernels-community on non-Hopper GPUs
 repo = "varunneal/flash-attention-3" if cap == (9, 0) else "kernels-community/flash-attn3"
 fa3 = get_kernel(repo).flash_attn_interface
@@ -453,6 +456,20 @@ DEVICE_BATCH_SIZE = 128  # per-device batch size (reduce if OOM)
 # Setup: tokenizer, model, optimizer, dataloader
 # ---------------------------------------------------------------------------
 
+
+
+
+
+
+def get_lr_multiplier(progress):
+    if progress < WARMUP_RATIO:
+        return progress / WARMUP_RATIO if WARMUP_RATIO > 0 else 1.0
+    elif progress < 1.0 - WARMDOWN_RATIO:
+        return 1.0
+    else:
+        cooldown = (1.0 - progress) / WARMDOWN_RATIO
+        return cooldown * 1.0 + (1 - cooldown) * FINAL_LR_FRAC
+
 if __name__ == "__main__":
     t_start = time.time()
     torch.manual_seed(42)
@@ -515,14 +532,7 @@ if __name__ == "__main__":
 
     # Schedules (all based on progress = training_time / TIME_BUDGET)
 
-    def get_lr_multiplier(progress):
-        if progress < WARMUP_RATIO:
-            return progress / WARMUP_RATIO if WARMUP_RATIO > 0 else 1.0
-        elif progress < 1.0 - WARMDOWN_RATIO:
-            return 1.0
-        else:
-            cooldown = (1.0 - progress) / WARMDOWN_RATIO
-            return cooldown * 1.0 + (1 - cooldown) * FINAL_LR_FRAC
+
 
     def get_muon_momentum(step):
         frac = min(step / 300, 1)
