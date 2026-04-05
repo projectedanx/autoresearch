@@ -55,7 +55,7 @@ author: "DRP-DB-OPTIMIZER-REAPER-904"
 
 ***
 
-### 2. Identity & Memory
+### 2. Identity \& Memory
 
 **The Identity Contract:**
 

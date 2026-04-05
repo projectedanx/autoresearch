@@ -1,0 +1,142 @@
+# D4: .github/workflows/ml-pipeline.yml
+# Compliant: RULE R1 (tests), R2 (no creds), R5 (digest pin), R10 (model card)
+
+name: ML Training & Deployment Pipeline
+
+on:
+  push:
+    branches: [main, release/*]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.11"
+  REGISTRY: registry.corp.io
+  IMAGE_NAME: ml/inference-server
+
+jobs:
+  # ── Phase 1: Validate ──────────────────────────────────────
+  validate:
+    name: "P1 — Schema & Data Validation"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install pinned dependencies
+      # RULE R12: Lock file enforcement
+      run: pip install --require-hashes -r requirements.lock
+
+    - name: Run data schema validation
+      # RULE R3: Schema validation BEFORE training
+      run: python -m pytest tests/test_schema_validation.py -v --tb=short
+
+    - name: Run data leakage check
+      # RULE R4: Split boundary audit
+      run: python scripts/audit_pipeline_split_boundary.py
+
+  # ── Phase 2: Test ─────────────────────────────────────────
+  test:
+    name: "P2 — Unit & Integration Tests"
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      run: pip install --require-hashes -r requirements.lock
+
+    - name: Run tests with coverage
+      # RULE R1: coverage < 90% = PIPELINE FAIL
+      run: |
+        pytest tests/ \
+          --cov=src \
+          --cov-report=xml \
+          --cov-fail-under=90 \
+          -v --tb=short
+
+    - name: Upload coverage artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: coverage.xml
+
+  # ── Phase 3: Build ────────────────────────────────────────
+  build:
+    name: "P3 — Build & Scan Container"
+    runs-on: ubuntu-latest
+    needs: test
+    outputs:
+      image_digest: ${{ steps.build.outputs.digest }}
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build Docker image
+      id: build
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: false
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Scan for secrets
+      # RULE R2: Secret scan on built image
+      uses: trufflesecurity/trufflehog-actions-scan@v3
+      with:
+        path: ./
+        base: main
+
+    - name: Vulnerability scan
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        severity: CRITICAL,HIGH
+        exit-code: 1
+
+  # ── Phase 4: Deploy ───────────────────────────────────────
+  deploy:
+    name: "P4 — Deploy & Register Model"
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Push image with digest pin
+      # RULE R5: No :latest — SHA digest enforced
+      run: |
+        IMAGE_REF="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.build.outputs.image_digest }}"
+        echo "IMAGE_REF=${IMAGE_REF}" >> $GITHUB_ENV
+
+    - name: Generate model card
+      # RULE R10: Model card generation step
+      run: python scripts/generate_model_card.py --version ${{ github.sha }}
+
+    - name: Deploy to Kubernetes
+      run: |
+        kubectl set image deployment/model-inference-v2-4-1 \
+          inference-server=${IMAGE_REF} \
+          --record
+
+    - name: Verify rollout
+      # RULE R6: Rollout verification
+      run: |
+        kubectl rollout status deployment/model-inference-v2-4-1 \
+          --timeout=300s || \
+          (kubectl rollout undo deployment/model-inference-v2-4-1 && exit 1)
+
+    - name: Deploy PSI monitor
+      # RULE R11: PSI monitoring harness
+      run: |
+        kubectl apply -f manifests/psi-monitoring-cronjob.yaml
