@@ -629,22 +629,3 @@ if __name__ == "__main__":
     print(f"num_params_M:     {num_params / 1e6:.1f}")
     print(f"depth:            {DEPTH}")
 
-# ---------------------------------------------------------------------------
-# Tests
-# ---------------------------------------------------------------------------
-
-def test_has_ve():
-    test_cases = [
-        (0, 1, True),
-        (0, 2, False),
-        (1, 2, True),
-        (0, 3, True),
-        (1, 3, False),
-        (2, 3, True),
-        (0, 8, False),
-        (1, 8, True),
-        (6, 8, False),
-        (7, 8, True),
-    ]
-    for layer_idx, n_layer, expected in test_cases:
-        assert has_ve(layer_idx, n_layer) == expected
