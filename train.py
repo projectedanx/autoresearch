@@ -14,13 +14,13 @@ from dataclasses import asdict, dataclass
 os.environ["PYTORCH_ALLOC_CONF"] = "expandable_segments:True"
 os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
 
-import numpy as np
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+import numpy as np  # noqa: E402
+import torch  # noqa: E402
+import torch.nn as nn  # noqa: E402
+import torch.nn.functional as F  # noqa: E402
 
 
-from kernels import get_kernel
+from kernels import get_kernel  # noqa: E402
 
 fa3 = None
 
@@ -29,13 +29,14 @@ def get_fa3_interface():
     global fa3
     if fa3 is None:
         cap = torch.cuda.get_device_capability()
-        # varunneal's FA3 is Hopper only, use kernels-community on non-Hopper GPUs
+        # varunneal's FA3 is Hopper only, use kernels-community on non-Hopper
         repo = ("varunneal/flash-attention-3"
                 if cap == (9, 0) else "kernels-community/flash-attn3")
         fa3 = get_kernel(repo).flash_attn_interface
     return fa3
 
-from prepare import (MAX_SEQ_LEN, TIME_BUDGET, Tokenizer,
+
+from prepare import (MAX_SEQ_LEN, TIME_BUDGET, Tokenizer,  # noqa: E402
                      make_dataloader, evaluate_bpb)
 
 
@@ -116,7 +117,8 @@ class CausalSelfAttention(nn.Module):
         q, k = norm(q), norm(k)
 
         fa3_interface = get_fa3_interface()
-        y = fa3_interface.flash_attn_func(q, k, v, causal=True, window_size=window_size)
+        y = fa3_interface.flash_attn_func(
+            q, k, v, causal=True, window_size=window_size)
         y = y.contiguous().view(B, T, -1)
         y = self.c_proj(y)
         return y
@@ -369,15 +371,19 @@ class AdamWState:
     exp_avg: torch.Tensor
     exp_avg_sq: torch.Tensor
 
-import torch.utils._pytree as pytree
+
+import torch.utils._pytree as pytree  # noqa: E402
 pytree.register_pytree_node(
     AdamWState,
     lambda x: ([x.p, x.grad, x.exp_avg, x.exp_avg_sq], None),
     lambda values, context: AdamWState(*values)
 )
 
+
 @torch.compile(dynamic=False, fullgraph=True)
-def adamw_step_fused(state: AdamWState, step_t, lr_t, beta1_t, beta2_t, eps_t, wd_t):
+def adamw_step_fused(
+    state: AdamWState, step_t, lr_t, beta1_t, beta2_t, eps_t, wd_t
+):
     state.p.mul_(1 - lr_t * wd_t)
     state.exp_avg.lerp_(state.grad, 1 - beta1_t)
     state.exp_avg_sq.lerp_(state.grad.square(), 1 - beta2_t)
@@ -550,6 +556,15 @@ DEVICE_BATCH_SIZE = 128  # per-device batch size (reduce if OOM)
 # ---------------------------------------------------------------------------
 
 
+def get_lr_multiplier(progress):
+    if progress < WARMUP_RATIO:
+        return progress / WARMUP_RATIO
+    elif progress > 1.0 - WARMDOWN_RATIO:
+        return FINAL_LR_FRAC + (1.0 - FINAL_LR_FRAC) * (
+            1.0 - progress) / WARMDOWN_RATIO
+    return 1.0
+
+
 if __name__ == "__main__":
     t_start = time.time()
     torch.manual_seed(42)
@@ -620,7 +635,9 @@ if __name__ == "__main__":
     dtype_bytes = 2  # bfloat16
     vram_limit = int(gpu_vram_gb * 1e9 * 0.75 / dtype_bytes)
     if effective_bs > vram_limit:
-        print(f"RULE_R9_WARN: effective_batch_size={effective_bs} exceeds 75% VRAM budget ({vram_limit} elements). Risk: OOM at epoch boundary. [SCA-0103]")
+        print(
+            f"RULE_R9_WARN: effective_batch_size={effective_bs} exceeds "
+            f"75% VRAM budget ({vram_limit} elements). Risk: OOM. [SCA-0103]")
     else:
         print(f"Effective batch size: {effective_bs}")
 
@@ -629,15 +646,16 @@ if __name__ == "__main__":
         if torch.cuda.is_available():
             allocated = torch.cuda.memory_allocated() / 1e9
             reserved = torch.cuda.memory_reserved() / 1e9
-            print(f"[{step_name}] GPU mem — allocated: {allocated:.2f}GB | reserved: {reserved:.2f}GB")
+            print(
+                f"[{step_name}] GPU mem — allocated: {allocated:.2f}GB | "
+                f"reserved: {reserved:.2f}GB")
 
     log_gpu_memory("pre_training")
 
     # Schedules (all based on progress = training_time / TIME_BUDGET)
 
-
-
     def get_muon_momentum(step):
+
         frac = min(step / 300, 1)
         return (1 - frac) * 0.85 + frac * 0.95
 
@@ -758,4 +776,3 @@ if __name__ == "__main__":
     print(f"num_steps:        {step}")
     print(f"num_params_M:     {num_params / 1e6:.1f}")
     print(f"depth:            {DEPTH}")
-

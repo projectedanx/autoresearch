@@ -474,6 +474,7 @@ COPY --from=builder /usr/local/lib/python3.11 /usr/local/lib/python3.11
 COPY --from=builder /build/src ./src
 COPY --from=builder /build/configs ./configs
 
+RUN chown -R mluser:mluser /app
 USER mluser
 
 # RULE R8: Reproducibility seed enforced at runtime via ENV
@@ -603,7 +604,7 @@ def run_epoch(model, optimizer, config, device) -> float:
 
 if __name__ == "__main__":
     import yaml, sys
-    with open(sys.argv[^1]) as f:
+    with open(sys.argv[1]) as f:
         cfg = yaml.safe_load(f)
     train(cfg)
 ```

@@ -1,6 +1,7 @@
 import unittest
 import train
 
+
 class TestTrain(unittest.TestCase):
     def test_get_lr_multiplier(self):
         # Save original values
@@ -57,6 +58,7 @@ class TestTrain(unittest.TestCase):
             train.WARMUP_RATIO = orig_warmup
             train.WARMDOWN_RATIO = orig_warmdown
             train.FINAL_LR_FRAC = orig_final_lr
+
 
 if __name__ == '__main__':
     unittest.main()
