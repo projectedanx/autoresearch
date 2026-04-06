@@ -408,6 +408,9 @@ def make_dataloader(tokenizer, B, T, split, buffer_size=1000):
 # ---------------------------------------------------------------------------
 
 
+_evaluate_bpb_batches_cache = {}
+
+
 @torch.no_grad()
 def evaluate_bpb(model, tokenizer, batch_size):
     """
@@ -418,12 +421,18 @@ def evaluate_bpb(model, tokenizer, batch_size):
     Uses fixed MAX_SEQ_LEN so results are comparable across configs.
     """
     token_bytes = get_token_bytes(device="cuda")
-    val_loader = make_dataloader(tokenizer, batch_size, MAX_SEQ_LEN, "val")
     steps = EVAL_TOKENS // (batch_size * MAX_SEQ_LEN)
+
+    if batch_size not in _evaluate_bpb_batches_cache:
+        val_loader = make_dataloader(tokenizer, batch_size, MAX_SEQ_LEN, "val")
+        _evaluate_bpb_batches_cache[batch_size] = [
+            next(val_loader) for _ in range(steps)
+        ]
+
+    val_batches = _evaluate_bpb_batches_cache[batch_size]
     total_nats = 0.0
     total_bytes = 0
-    for _ in range(steps):
-        x, y, _ = next(val_loader)
+    for x, y, _ in val_batches:
         loss_flat = model(x, y, reduction='none').view(-1)
         y_flat = y.view(-1)
         nbytes = token_bytes[y_flat]
