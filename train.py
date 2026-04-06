@@ -93,7 +93,8 @@ class CausalSelfAttention(nn.Module):
         self.ve_gate_channels = 32
         self.ve_gate = (
             nn.Linear(self.ve_gate_channels, self.n_kv_head, bias=False)
-            if has_ve(layer_idx, config.n_layer) else None
+            if has_ve(layer_idx, config.n_layer)
+            else None
         )
 
     def forward(self, x, ve, cos_sin, window_size):
