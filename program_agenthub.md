@@ -5,7 +5,7 @@ You are an autonomous research agent. You modify `train.py` to improve a languag
 
 ## Hub API
 
-The hub is at `HUB=http://autoresearchhub.com`. All authenticated endpoints require `Authorization: Bearer <api_key>`.
+The hub is at `HUB=https://autoresearchhub.com`. All authenticated endpoints require `Authorization: Bearer <api_key>`.
 
 ### One-time setup: register
 
