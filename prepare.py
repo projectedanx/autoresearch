@@ -455,6 +455,55 @@ def evaluate_bpb(model, tokenizer, batch_size):
     return total_nats / (math.log(2) * total_bytes)
 
 # ---------------------------------------------------------------------------
+# Tests
+# ---------------------------------------------------------------------------
+
+import unittest
+from unittest.mock import Mock
+
+class TestTokenizer(unittest.TestCase):
+    def setUp(self):
+        self.mock_enc = Mock()
+        self.tokenizer = Tokenizer(self.mock_enc)
+        self.mock_enc.reset_mock()
+
+    def test_encode_string_no_prepend(self):
+        self.mock_enc.encode_ordinary.return_value = [1, 2, 3]
+        result = self.tokenizer.encode("test string")
+        self.mock_enc.encode_ordinary.assert_called_once_with("test string")
+        self.assertEqual(result, [1, 2, 3])
+
+    def test_encode_string_int_prepend(self):
+        self.mock_enc.encode_ordinary.return_value = [1, 2, 3]
+        result = self.tokenizer.encode("test string", prepend=99)
+        self.mock_enc.encode_ordinary.assert_called_once_with("test string")
+        self.assertEqual(result, [99, 1, 2, 3])
+
+    def test_encode_string_str_prepend(self):
+        self.mock_enc.encode_ordinary.return_value = [1, 2, 3]
+        self.mock_enc.encode_single_token.return_value = 88
+        result = self.tokenizer.encode("test string", prepend="<BOS>")
+        self.mock_enc.encode_single_token.assert_called_once_with("<BOS>")
+        self.mock_enc.encode_ordinary.assert_called_once_with("test string")
+        self.assertEqual(result, [88, 1, 2, 3])
+
+    def test_encode_list_no_prepend(self):
+        self.mock_enc.encode_ordinary_batch.return_value = [[1, 2], [3, 4]]
+        result = self.tokenizer.encode(["test1", "test2"], num_threads=4)
+        self.mock_enc.encode_ordinary_batch.assert_called_once_with(["test1", "test2"], num_threads=4)
+        self.assertEqual(result, [[1, 2], [3, 4]])
+
+    def test_encode_list_int_prepend(self):
+        self.mock_enc.encode_ordinary_batch.return_value = [[1, 2], [3, 4]]
+        result = self.tokenizer.encode(["test1", "test2"], prepend=99, num_threads=4)
+        self.mock_enc.encode_ordinary_batch.assert_called_once_with(["test1", "test2"], num_threads=4)
+        self.assertEqual(result, [[99, 1, 2], [99, 3, 4]])
+
+    def test_encode_invalid_type(self):
+        with self.assertRaisesRegex(ValueError, "Invalid input type"):
+            self.tokenizer.encode(123)
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
