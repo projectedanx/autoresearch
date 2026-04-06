@@ -158,33 +158,7 @@ def text_iterator(max_chars=1_000_000_000, doc_cap=10_000):
                     return
 
 
-def train_tokenizer():
-    """Train BPE tokenizer using rustbpe, save as tiktoken JSON."""
-    tokenizer_json = os.path.join(TOKENIZER_DIR, "tokenizer.json")
-    token_bytes_path = os.path.join(TOKENIZER_DIR, "token_bytes.pt")
-
-    if os.path.exists(tokenizer_json) and os.path.exists(token_bytes_path):
-        print(f"Tokenizer: already trained at {TOKENIZER_DIR}")
-        return
-
-    os.makedirs(TOKENIZER_DIR, exist_ok=True)
-
-    parquet_files = list_parquet_files()
-    if len(parquet_files) < 2:
-        print("Tokenizer: need at least 2 data shards (1 train + 1 val). "
-              "Download more data first.")
-        sys.exit(1)
-
-    # --- Train with rustbpe ---
-    print("Tokenizer: training BPE tokenizer...")
-    t0 = time.time()
-
-    tokenizer = rustbpe.Tokenizer()
-    vocab_size_no_special = VOCAB_SIZE - len(SPECIAL_TOKENS)
-    tokenizer.train_from_iterator(
-        text_iterator(), vocab_size_no_special, pattern=SPLIT_PATTERN
-    )
-
+def _save_tiktoken_json(tokenizer, tokenizer_json):
     # Build tiktoken encoding from trained merges
     pattern = tokenizer.get_pattern()
     mergeable_ranks = {bytes(k): v for k, v in tokenizer.get_mergeable_ranks()}
@@ -213,12 +187,10 @@ def train_tokenizer():
     }
     with open(tokenizer_json, "w") as f:
         json.dump(tokenizer_data, f)
+    return enc
 
-    t1 = time.time()
-    print(f"Tokenizer: trained in {t1 - t0:.1f}s, saved to {tokenizer_json}")
 
-    # --- Build token_bytes lookup for BPB evaluation ---
-    print("Tokenizer: building token_bytes lookup...")
+def _build_token_bytes_lookup(enc, token_bytes_path):
     special_set = set(SPECIAL_TOKENS)
     token_bytes_list = []
     for token_id in range(enc.n_vocab):
@@ -229,15 +201,56 @@ def train_tokenizer():
             token_bytes_list.append(len(token_str.encode("utf-8")))
     token_bytes_tensor = torch.tensor(token_bytes_list, dtype=torch.int32)
     torch.save(token_bytes_tensor, token_bytes_path)
-    print(f"Tokenizer: saved token_bytes to {token_bytes_path}")
 
-    # Sanity check
+
+def _sanity_check_tokenizer(enc):
     test = "Hello world! Numbers: 123. Unicode: 你好"
     encoded = enc.encode_ordinary(test)
     decoded = enc.decode(encoded)
     assert decoded == test, \
         f"Tokenizer roundtrip failed: {test!r} -> {decoded!r}"
     print(f"Tokenizer: sanity check passed (vocab_size={enc.n_vocab})")
+
+
+def train_tokenizer():
+    """Train BPE tokenizer using rustbpe, save as tiktoken JSON."""
+    tokenizer_json = os.path.join(TOKENIZER_DIR, "tokenizer.json")
+    token_bytes_path = os.path.join(TOKENIZER_DIR, "token_bytes.pt")
+
+    if os.path.exists(tokenizer_json) and os.path.exists(token_bytes_path):
+        print(f"Tokenizer: already trained at {TOKENIZER_DIR}")
+        return
+
+    os.makedirs(TOKENIZER_DIR, exist_ok=True)
+
+    parquet_files = list_parquet_files()
+    if len(parquet_files) < 2:
+        print("Tokenizer: need at least 2 data shards (1 train + 1 val). "
+              "Download more data first.")
+        sys.exit(1)
+
+    # --- Train with rustbpe ---
+    print("Tokenizer: training BPE tokenizer...")
+    t0 = time.time()
+
+    tokenizer = rustbpe.Tokenizer()
+    vocab_size_no_special = VOCAB_SIZE - len(SPECIAL_TOKENS)
+    tokenizer.train_from_iterator(
+        text_iterator(), vocab_size_no_special, pattern=SPLIT_PATTERN
+    )
+
+    enc = _save_tiktoken_json(tokenizer, tokenizer_json)
+
+    t1 = time.time()
+    print(f"Tokenizer: trained in {t1 - t0:.1f}s, saved to {tokenizer_json}")
+
+    # --- Build token_bytes lookup for BPB evaluation ---
+    print("Tokenizer: building token_bytes lookup...")
+    _build_token_bytes_lookup(enc, token_bytes_path)
+    print(f"Tokenizer: saved token_bytes to {token_bytes_path}")
+
+    # Sanity check
+    _sanity_check_tokenizer(enc)
 
 # ---------------------------------------------------------------------------
 # Runtime utilities (imported by train.py)
