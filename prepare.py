@@ -9,6 +9,8 @@ Usage:
 Data and tokenizer are stored in ~/.cache/autoresearch/.
 """
 
+import unittest
+from unittest.mock import Mock
 import os
 import sys
 import time
@@ -22,7 +24,7 @@ import requests
 import pyarrow.parquet as pq
 import rustbpe
 import tiktoken
-import torch
+import torch  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Constants (fixed, do not modify)
@@ -458,8 +460,6 @@ def evaluate_bpb(model, tokenizer, batch_size):
 # Tests
 # ---------------------------------------------------------------------------
 
-import unittest
-from unittest.mock import Mock
 
 class TestTokenizer(unittest.TestCase):
     def setUp(self):
@@ -490,13 +490,16 @@ class TestTokenizer(unittest.TestCase):
     def test_encode_list_no_prepend(self):
         self.mock_enc.encode_ordinary_batch.return_value = [[1, 2], [3, 4]]
         result = self.tokenizer.encode(["test1", "test2"], num_threads=4)
-        self.mock_enc.encode_ordinary_batch.assert_called_once_with(["test1", "test2"], num_threads=4)
+        self.mock_enc.encode_ordinary_batch.assert_called_once_with(
+            ["test1", "test2"], num_threads=4)
         self.assertEqual(result, [[1, 2], [3, 4]])
 
     def test_encode_list_int_prepend(self):
         self.mock_enc.encode_ordinary_batch.return_value = [[1, 2], [3, 4]]
-        result = self.tokenizer.encode(["test1", "test2"], prepend=99, num_threads=4)
-        self.mock_enc.encode_ordinary_batch.assert_called_once_with(["test1", "test2"], num_threads=4)
+        result = self.tokenizer.encode(
+            ["test1", "test2"], prepend=99, num_threads=4)
+        self.mock_enc.encode_ordinary_batch.assert_called_once_with(
+            ["test1", "test2"], num_threads=4)
         self.assertEqual(result, [[99, 1, 2], [99, 3, 4]])
 
     def test_encode_invalid_type(self):
