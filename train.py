@@ -369,7 +369,7 @@ class AdamWState:
     exp_avg: torch.Tensor
     exp_avg_sq: torch.Tensor
 
-import torch.utils._pytree as pytree
+import torch.utils._pytree as pytree  # noqa: E402
 pytree.register_pytree_node(
     AdamWState,
     lambda x: ([x.p, x.grad, x.exp_avg, x.exp_avg_sq], None),
@@ -377,7 +377,9 @@ pytree.register_pytree_node(
 )
 
 @torch.compile(dynamic=False, fullgraph=True)
-def adamw_step_fused(state: AdamWState, step_t, lr_t, beta1_t, beta2_t, eps_t, wd_t):
+def adamw_step_fused(
+    state: AdamWState, step_t, lr_t, beta1_t, beta2_t, eps_t, wd_t
+):
     state.p.mul_(1 - lr_t * wd_t)
     state.exp_avg.lerp_(state.grad, 1 - beta1_t)
     state.exp_avg_sq.lerp_(state.grad.square(), 1 - beta2_t)
@@ -548,6 +550,68 @@ DEVICE_BATCH_SIZE = 128  # per-device batch size (reduce if OOM)
 # ---------------------------------------------------------------------------
 # Setup: tokenizer, model, optimizer, dataloader
 # ---------------------------------------------------------------------------
+
+
+
+def get_lr_multiplier(progress):
+    if progress < WARMUP_RATIO:
+        return progress / WARMUP_RATIO
+    elif progress < 1.0 - WARMDOWN_RATIO:
+        return 1.0
+    else:
+        cooldown = (1.0 - progress) / WARMDOWN_RATIO
+        return cooldown * 1.0 + (1.0 - cooldown) * FINAL_LR_FRAC
+
+
+
+# Tests
+# ---------------------------------------------------------------------------
+import unittest  # noqa: E402
+
+
+class TestAdamWStepFused(unittest.TestCase):
+    def test_adamw_step_fused(self):
+        # Create a simple parameter
+        p = torch.tensor([1.0, 2.0, 3.0], requires_grad=True)
+        # Create dummy gradients
+        p.grad = torch.tensor([0.1, 0.2, -0.1])
+
+        # Setup standard PyTorch AdamW
+        optim = torch.optim.AdamW(
+            [p], lr=1e-3, betas=(0.9, 0.999), eps=1e-8, weight_decay=0.01
+        )
+
+        # Take a step with PyTorch AdamW
+        optim.step()
+
+        # Expected state
+        expected_p = p.clone().detach()
+        expected_m = optim.state[p]['exp_avg'].clone().detach()
+        expected_v = optim.state[p]['exp_avg_sq'].clone().detach()
+
+        # Reset parameter and gradient for custom fused step
+        p_custom = torch.tensor([1.0, 2.0, 3.0])
+        grad_custom = torch.tensor([0.1, 0.2, -0.1])
+        exp_avg = torch.zeros_like(p_custom)
+        exp_avg_sq = torch.zeros_like(p_custom)
+
+        state = AdamWState(
+            p=p_custom, grad=grad_custom, exp_avg=exp_avg, exp_avg_sq=exp_avg_sq
+        )
+
+        # Define hyperparams as tensors (as expected by fused step)
+        step_t = torch.tensor(1, dtype=torch.int32)
+        lr_t = torch.tensor(1e-3)
+        beta1_t = torch.tensor(0.9)
+        beta2_t = torch.tensor(0.999)
+        eps_t = torch.tensor(1e-8)
+        wd_t = torch.tensor(0.01)
+
+        adamw_step_fused(state, step_t, lr_t, beta1_t, beta2_t, eps_t, wd_t)
+
+        torch.testing.assert_close(state.p, expected_p)
+        torch.testing.assert_close(state.exp_avg, expected_m)
+        torch.testing.assert_close(state.exp_avg_sq, expected_v)
 
 
 if __name__ == "__main__":
