@@ -64,6 +64,27 @@ BOS_TOKEN = "<|reserved_0|>"
 # ---------------------------------------------------------------------------
 
 
+def _attempt_download(url, filepath, filename):
+    response = requests.get(url, stream=True, timeout=30)
+    response.raise_for_status()
+    temp_path = filepath + ".tmp"
+    with open(temp_path, "wb") as f:
+        for chunk in response.iter_content(chunk_size=1024 * 1024):
+            if chunk:
+                f.write(chunk)
+    os.rename(temp_path, filepath)
+    print(f"  Downloaded {filename}")
+
+
+def _cleanup_failed_download(filepath):
+    for path in [filepath + ".tmp", filepath]:
+        if os.path.exists(path):
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+
+
 def download_single_shard(index):
     """Download one parquet shard with retries. Returns True on success."""
     filename = f"shard_{index:05d}.parquet"
@@ -75,27 +96,14 @@ def download_single_shard(index):
     max_attempts = 5
     for attempt in range(1, max_attempts + 1):
         try:
-            response = requests.get(url, stream=True, timeout=30)
-            response.raise_for_status()
-            temp_path = filepath + ".tmp"
-            with open(temp_path, "wb") as f:
-                for chunk in response.iter_content(chunk_size=1024 * 1024):
-                    if chunk:
-                        f.write(chunk)
-            os.rename(temp_path, filepath)
-            print(f"  Downloaded {filename}")
+            _attempt_download(url, filepath, filename)
             return True
         except (requests.RequestException, IOError) as e:
             print(
                 f"  Attempt {attempt}/{max_attempts} failed for {filename}: "
                 f"{e}"
             )
-            for path in [filepath + ".tmp", filepath]:
-                if os.path.exists(path):
-                    try:
-                        os.remove(path)
-                    except OSError:
-                        pass
+            _cleanup_failed_download(filepath)
             if attempt < max_attempts:
                 time.sleep(2 ** attempt)
     return False
