@@ -507,6 +507,133 @@ class TestTokenizer(unittest.TestCase):
             self.tokenizer.encode(123)
 
 # ---------------------------------------------------------------------------
+class TestDownloadSingleShard(unittest.TestCase):
+
+    @unittest.mock.patch("prepare.os.path.exists")
+
+    @unittest.mock.patch("prepare.requests.get")
+
+    @unittest.mock.patch("prepare.time.sleep")
+
+    @unittest.mock.patch("prepare.os.remove")
+
+    def test_download_single_shard_failure(self, mock_remove, mock_sleep, mock_get, mock_exists):
+
+        def exists_side_effect(path):
+
+            if path == os.path.join(DATA_DIR, "shard_00000.parquet"):
+
+                return False
+
+            if path.endswith(".tmp"):
+
+                return True
+
+            return False
+
+        mock_exists.side_effect = exists_side_effect
+
+        mock_get.side_effect = requests.RequestException("Mocked exception")
+
+
+
+        result = download_single_shard(0)
+
+
+
+        self.assertFalse(result)
+
+        self.assertEqual(mock_get.call_count, 5)
+
+        self.assertEqual(mock_sleep.call_count, 4)
+
+        self.assertEqual(mock_remove.call_count, 5)
+
+
+
+    @unittest.mock.patch("prepare.os.path.exists")
+
+    @unittest.mock.patch("prepare.requests.get")
+
+    @unittest.mock.patch("prepare.os.rename")
+
+    @unittest.mock.patch("builtins.open", new_callable=unittest.mock.mock_open)
+
+    def test_download_single_shard_success(self, mock_open, mock_rename, mock_get, mock_exists):
+
+        mock_exists.return_value = False
+
+
+
+        mock_response = unittest.mock.MagicMock()
+
+        mock_response.iter_content.return_value = [b"chunk1", b"chunk2"]
+
+        mock_get.return_value = mock_response
+
+
+
+        result = download_single_shard(0)
+
+
+
+        self.assertTrue(result)
+
+        mock_get.assert_called_once()
+
+        mock_response.raise_for_status.assert_called_once()
+
+        mock_open.assert_called_once()
+
+        mock_rename.assert_called_once()
+
+
+
+    @unittest.mock.patch("prepare.os.path.exists")
+
+    @unittest.mock.patch("prepare.requests.get")
+
+    @unittest.mock.patch("prepare.time.sleep")
+
+    @unittest.mock.patch("prepare.os.remove")
+
+    def test_download_single_shard_oserror_on_remove(self, mock_remove, mock_sleep, mock_get, mock_exists):
+
+        def exists_side_effect(path):
+
+            if path == os.path.join(DATA_DIR, "shard_00000.parquet"):
+
+                return False
+
+            if path.endswith(".tmp"):
+
+                return True
+
+            return False
+
+        mock_exists.side_effect = exists_side_effect
+
+
+
+        mock_get.side_effect = requests.RequestException("Mocked exception")
+
+        mock_remove.side_effect = OSError("Mocked OSError")
+
+
+
+        result = download_single_shard(0)
+
+
+
+        self.assertFalse(result)
+
+        self.assertEqual(mock_get.call_count, 5)
+
+        self.assertEqual(mock_sleep.call_count, 4)
+
+        self.assertEqual(mock_remove.call_count, 5)
+
+
 # Main
 # ---------------------------------------------------------------------------
 
