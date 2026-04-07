@@ -343,7 +343,7 @@ def _document_batches(split, tokenizer_batch_size=128):
                 rg = pf.read_row_group(rg_idx)
                 batch = rg.column('text').to_pylist()
                 for i in range(0, len(batch), tokenizer_batch_size):
-                    yield batch[i:i+tokenizer_batch_size], epoch
+                    yield batch[i:i + tokenizer_batch_size], epoch
         epoch += 1
 
 
@@ -376,41 +376,46 @@ def make_dataloader(tokenizer, B, T, split, buffer_size=1000):
     inputs = gpu_buffer[:B * T].view(B, T)
     targets = gpu_buffer[B * T:].view(B, T)
 
+    def find_best_and_shortest_doc(remaining):
+        best_idx = -1
+        best_len = 0
+        shortest_idx = -1
+        shortest_len = float('inf')
+
+        for i, doc in enumerate(doc_buffer):
+            doc_len = len(doc)
+            if doc_len <= remaining and doc_len > best_len:
+                best_idx = i
+                best_len = doc_len
+            if doc_len < shortest_len:
+                shortest_idx = i
+                shortest_len = doc_len
+        return best_idx, shortest_idx
+
+    def fill_row(row_idx):
+        pos = 0
+        while pos < row_capacity:
+            while len(doc_buffer) < buffer_size:
+                refill_buffer()
+
+            remaining = row_capacity - pos
+            best_idx, shortest_idx = find_best_and_shortest_doc(remaining)
+
+            if best_idx >= 0:
+                doc = doc_buffer.pop(best_idx)
+                row_buffer[row_idx, pos:pos + len(doc)] = torch.tensor(
+                    doc, dtype=torch.long)
+                pos += len(doc)
+            else:
+                # No doc fits — crop shortest to fill remaining
+                doc = doc_buffer.pop(shortest_idx)
+                row_buffer[row_idx, pos:pos + remaining] = torch.tensor(
+                    doc[:remaining], dtype=torch.long)
+                pos += remaining
+
     while True:
         for row_idx in range(B):
-            pos = 0
-            while pos < row_capacity:
-                while len(doc_buffer) < buffer_size:
-                    refill_buffer()
-
-                remaining = row_capacity - pos
-
-                # Find largest doc that fits entirely, and track shortest doc
-                best_idx = -1
-                best_len = 0
-                shortest_idx = -1
-                shortest_len = float('inf')
-
-                for i, doc in enumerate(doc_buffer):
-                    doc_len = len(doc)
-                    if doc_len <= remaining and doc_len > best_len:
-                        best_idx = i
-                        best_len = doc_len
-                    if doc_len < shortest_len:
-                        shortest_idx = i
-                        shortest_len = doc_len
-
-                if best_idx >= 0:
-                    doc = doc_buffer.pop(best_idx)
-                    row_buffer[row_idx, pos:pos + len(doc)] = torch.tensor(
-                        doc, dtype=torch.long)
-                    pos += len(doc)
-                else:
-                    # No doc fits — crop shortest to fill remaining
-                    doc = doc_buffer.pop(shortest_idx)
-                    row_buffer[row_idx, pos:pos + remaining] = torch.tensor(
-                        doc[:remaining], dtype=torch.long)
-                    pos += remaining
+            fill_row(row_idx)
 
         cpu_inputs.copy_(row_buffer[:, :-1])
         cpu_targets.copy_(row_buffer[:, 1:])
@@ -507,17 +512,16 @@ class TestTokenizer(unittest.TestCase):
             self.tokenizer.encode(123)
 
 # ---------------------------------------------------------------------------
+
+
 class TestDownloadSingleShard(unittest.TestCase):
 
     @unittest.mock.patch("prepare.os.path.exists")
-
     @unittest.mock.patch("prepare.requests.get")
-
     @unittest.mock.patch("prepare.time.sleep")
-
     @unittest.mock.patch("prepare.os.remove")
-
-    def test_download_single_shard_failure(self, mock_remove, mock_sleep, mock_get, mock_exists):
+    def test_download_single_shard_failure(
+            self, mock_remove, mock_sleep, mock_get, mock_exists):
 
         def exists_side_effect(path):
 
@@ -535,11 +539,7 @@ class TestDownloadSingleShard(unittest.TestCase):
 
         mock_get.side_effect = requests.RequestException("Mocked exception")
 
-
-
         result = download_single_shard(0)
-
-
 
         self.assertFalse(result)
 
@@ -549,21 +549,14 @@ class TestDownloadSingleShard(unittest.TestCase):
 
         self.assertEqual(mock_remove.call_count, 5)
 
-
-
     @unittest.mock.patch("prepare.os.path.exists")
-
     @unittest.mock.patch("prepare.requests.get")
-
     @unittest.mock.patch("prepare.os.rename")
-
     @unittest.mock.patch("builtins.open", new_callable=unittest.mock.mock_open)
-
-    def test_download_single_shard_success(self, mock_open, mock_rename, mock_get, mock_exists):
+    def test_download_single_shard_success(
+            self, mock_open, mock_rename, mock_get, mock_exists):
 
         mock_exists.return_value = False
-
-
 
         mock_response = unittest.mock.MagicMock()
 
@@ -571,11 +564,7 @@ class TestDownloadSingleShard(unittest.TestCase):
 
         mock_get.return_value = mock_response
 
-
-
         result = download_single_shard(0)
-
-
 
         self.assertTrue(result)
 
@@ -587,17 +576,12 @@ class TestDownloadSingleShard(unittest.TestCase):
 
         mock_rename.assert_called_once()
 
-
-
     @unittest.mock.patch("prepare.os.path.exists")
-
     @unittest.mock.patch("prepare.requests.get")
-
     @unittest.mock.patch("prepare.time.sleep")
-
     @unittest.mock.patch("prepare.os.remove")
-
-    def test_download_single_shard_oserror_on_remove(self, mock_remove, mock_sleep, mock_get, mock_exists):
+    def test_download_single_shard_oserror_on_remove(
+            self, mock_remove, mock_sleep, mock_get, mock_exists):
 
         def exists_side_effect(path):
 
@@ -613,17 +597,11 @@ class TestDownloadSingleShard(unittest.TestCase):
 
         mock_exists.side_effect = exists_side_effect
 
-
-
         mock_get.side_effect = requests.RequestException("Mocked exception")
 
         mock_remove.side_effect = OSError("Mocked OSError")
 
-
-
         result = download_single_shard(0)
-
-
 
         self.assertFalse(result)
 
