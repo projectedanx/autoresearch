@@ -371,6 +371,7 @@ class AdamWState:
     exp_avg: torch.Tensor
     exp_avg_sq: torch.Tensor
 
+
 import torch.utils._pytree as pytree  # noqa: E402
 pytree.register_pytree_node(
     AdamWState,
@@ -555,7 +556,6 @@ DEVICE_BATCH_SIZE = 128  # per-device batch size (reduce if OOM)
 # ---------------------------------------------------------------------------
 
 
-
 def get_lr_multiplier(progress):
     if progress < WARMUP_RATIO:
         return progress / WARMUP_RATIO
@@ -564,7 +564,6 @@ def get_lr_multiplier(progress):
     else:
         cooldown = (1.0 - progress) / WARMDOWN_RATIO
         return cooldown * 1.0 + (1.0 - cooldown) * FINAL_LR_FRAC
-
 
 
 # Tests
@@ -599,7 +598,10 @@ class TestAdamWStepFused(unittest.TestCase):
         exp_avg_sq = torch.zeros_like(p_custom)
 
         state = AdamWState(
-            p=p_custom, grad=grad_custom, exp_avg=exp_avg, exp_avg_sq=exp_avg_sq
+            p=p_custom,
+            grad=grad_custom,
+            exp_avg=exp_avg,
+            exp_avg_sq=exp_avg_sq
         )
 
         # Define hyperparams as tensors (as expected by fused step)
