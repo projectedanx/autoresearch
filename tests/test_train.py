@@ -59,6 +59,25 @@ class TestTrain(unittest.TestCase):
             train.WARMDOWN_RATIO = orig_warmdown
             train.FINAL_LR_FRAC = orig_final_lr
 
+    def test_has_ve(self):
+        # Case 1: Even n_layer (e.g., 12)
+        # (12 - 1) % 2 = 1. So odd layer_idx should return True.
+        self.assertFalse(train.has_ve(0, 12))
+        self.assertTrue(train.has_ve(1, 12))
+        self.assertFalse(train.has_ve(2, 12))
+        self.assertTrue(train.has_ve(11, 12))
+
+        # Case 2: Odd n_layer (e.g., 13)
+        # (13 - 1) % 2 = 0. So even layer_idx should return True.
+        self.assertTrue(train.has_ve(0, 13))
+        self.assertFalse(train.has_ve(1, 13))
+        self.assertTrue(train.has_ve(2, 13))
+        self.assertTrue(train.has_ve(12, 13))
+
+        # Case 3: n_layer = 1
+        # (1 - 1) % 2 = 0.
+        self.assertTrue(train.has_ve(0, 1))
+
 
 if __name__ == '__main__':
     unittest.main()
