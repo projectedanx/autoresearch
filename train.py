@@ -56,6 +56,16 @@ class GPTConfig:
     window_pattern: str = "SSSL"
 
 
+@dataclass
+class OptimizerConfig:
+    unembedding_lr: float = 0.004
+    embedding_lr: float = 0.2
+    matrix_lr: float = 0.02
+    weight_decay: float = 0.0
+    adam_betas: tuple = (0.8, 0.95)
+    scalar_lr: float = 0.5
+
+
 def norm(x):
     return F.rms_norm(x, (x.size(-1),))
 
@@ -272,9 +282,7 @@ class GPT(nn.Module):
             'total': total,
         }
 
-    def setup_optimizer(
-            self, unembedding_lr=0.004, embedding_lr=0.2, matrix_lr=0.02,
-            weight_decay=0.0, adam_betas=(0.8, 0.95), scalar_lr=0.5):
+    def setup_optimizer(self, opt_config: OptimizerConfig):
         model_dim = self.config.n_embd
         matrix_params = list(self.transformer.h.parameters())
         value_embeds_params = list(self.value_embeds.parameters())
@@ -293,27 +301,27 @@ class GPT(nn.Module):
               f"{dmodel_lr_scale:.6f}")
         param_groups = [
             dict(kind='adamw', params=lm_head_params,
-                 lr=unembedding_lr * dmodel_lr_scale,
-                 betas=adam_betas, eps=1e-10, weight_decay=0.0),
+                 lr=opt_config.unembedding_lr * dmodel_lr_scale,
+                 betas=opt_config.adam_betas, eps=1e-10, weight_decay=0.0),
             dict(kind='adamw', params=embedding_params,
-                 lr=embedding_lr * dmodel_lr_scale,
-                 betas=adam_betas, eps=1e-10, weight_decay=0.0),
+                 lr=opt_config.embedding_lr * dmodel_lr_scale,
+                 betas=opt_config.adam_betas, eps=1e-10, weight_decay=0.0),
             dict(kind='adamw', params=value_embeds_params,
-                 lr=embedding_lr * dmodel_lr_scale,
-                 betas=adam_betas, eps=1e-10, weight_decay=0.0),
+                 lr=opt_config.embedding_lr * dmodel_lr_scale,
+                 betas=opt_config.adam_betas, eps=1e-10, weight_decay=0.0),
             dict(kind='adamw', params=resid_params,
-                 lr=scalar_lr * 0.01,
-                 betas=adam_betas, eps=1e-10, weight_decay=0.0),
+                 lr=opt_config.scalar_lr * 0.01,
+                 betas=opt_config.adam_betas, eps=1e-10, weight_decay=0.0),
             dict(kind='adamw', params=x0_params,
-                 lr=scalar_lr,
+                 lr=opt_config.scalar_lr,
                  betas=(0.96, 0.95), eps=1e-10, weight_decay=0.0),
         ]
         for shape in sorted({p.shape for p in matrix_params}):
             group_params = [p for p in matrix_params if p.shape == shape]
             param_groups.append(dict(
-                kind='muon', params=group_params, lr=matrix_lr,
+                kind='muon', params=group_params, lr=opt_config.matrix_lr,
                 momentum=0.95, ns_steps=5, beta2=0.95,
-                weight_decay=weight_decay,
+                weight_decay=opt_config.weight_decay,
             ))
         optimizer = MuonAdamW(param_groups)
         for group in optimizer.param_groups:
@@ -665,7 +673,7 @@ if __name__ == "__main__":
     assert TOTAL_BATCH_SIZE % tokens_per_fwdbwd == 0
     grad_accum_steps = TOTAL_BATCH_SIZE // tokens_per_fwdbwd
 
-    optimizer = model.setup_optimizer(
+    opt_config = OptimizerConfig(
         unembedding_lr=UNEMBEDDING_LR,
         embedding_lr=EMBEDDING_LR,
         scalar_lr=SCALAR_LR,
@@ -673,6 +681,7 @@ if __name__ == "__main__":
         matrix_lr=MATRIX_LR,
         weight_decay=WEIGHT_DECAY,
     )
+    optimizer = model.setup_optimizer(opt_config)
 
     model = torch.compile(model, dynamic=False)
 
