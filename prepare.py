@@ -392,10 +392,13 @@ def make_dataloader(tokenizer, B, T, split, buffer_size=1000):
 
         for i, doc in enumerate(doc_buffer):
             doc_len = len(doc)
-            if doc_len <= remaining and doc_len > best_len:
-                best_idx = i
-                best_len = doc_len
-            if doc_len < shortest_len:
+            if doc_len <= remaining:
+                if doc_len > best_len:
+                    best_idx = i
+                    best_len = doc_len
+                    if best_len == remaining:
+                        break
+            elif best_idx == -1 and doc_len < shortest_len:
                 shortest_idx = i
                 shortest_len = doc_len
         return best_idx, shortest_idx
