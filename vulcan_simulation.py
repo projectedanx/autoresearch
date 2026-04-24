@@ -1,4 +1,5 @@
 import unittest
+from collections import defaultdict
 
 
 class VULCANTopologyEvaluator:
@@ -46,9 +47,14 @@ class VULCANTopologyEvaluator:
         Automatically reject any design that proposes multiple disparate
         bounded contexts writing directly to the same database tables.
         """
+        # Group edges by target for O(E) edge retrieval
+        edges_by_target = defaultdict(list)
+        for edge in self.edges:
+            edges_by_target[edge['target']].append(edge)
+
         for db in self.databases:
             writers_contexts = set()
-            for edge in self.get_in_edges(db):
+            for edge in edges_by_target[db]:
                 u = edge['source']
                 interaction = edge['interaction_type']
                 # Ensure the interaction is a write/direct access
