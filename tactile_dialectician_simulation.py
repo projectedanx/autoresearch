@@ -70,7 +70,7 @@ def test_thermodynamic_optimization():
     standard_metrics = simulate_standard_kaggle_boot()
     subversion_metrics = simulate_jules_micro_mimicry_and_offline_wheels()
 
-    ttfi_reduction = (standard_metrics.ttfi_seconds - subversion_metrics.ttfi_seconds) / standard_metrics.ttfi_seconds
+    ttfi_reduction = (standard_metrics.ttfi_seconds - subversion_metrics.ttfi_seconds) / (standard_metrics.ttfi_seconds or 1)
     ram_reduction_mb = standard_metrics.ram_usage_mb - subversion_metrics.ram_usage_mb
 
     print(
