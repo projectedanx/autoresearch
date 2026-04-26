@@ -50,7 +50,7 @@ def mock_sys_modules_pruning():
 
     for mod_name in list(sys.modules.keys()):
         # In a real scenario we'd be more careful, but this is a targeted purge
-        if not any(mod_name.startswith(keep) for keep in modules_to_keep) and mod_name in ('mock_heavy_lib_1', 'mock_heavy_lib_2'):
+        if mod_name in ('mock_heavy_lib_1', 'mock_heavy_lib_2'):
             modules_to_delete.append(mod_name)
 
     for mod_name in modules_to_delete:
