@@ -87,3 +87,13 @@ I think these would be the reasonable hyperparameters to play with. Ask your fav
 ## License
 
 MIT
+
+## Pluriversal Architecture Simulation
+
+The `pluriversal_simulation.py` file defines a `PluriversalTopologyEvaluator` class that implements functional codebase simulations of a Pluriversal Agent's core architecture. This includes:
+
+- **Anionic Logit Masking**: Mathematically enforcing Anti-Goals by zeroing out logits of forbidden tokens prior to generation.
+- **Epistemic Escrow**: A specialized buffer to safely hold and process conflicting API schemas without triggering system failure.
+- **Mereotopological Fencing**: Utilizing Region Connection Calculus (RCC-8) to define spatial isolation between components (e.g., verifying `DC` - Disconnected boundaries).
+- **Topological Data Analysis (TDA)**: Computing Betti numbers ($b_0$ for disconnected components and $b_1$ for cycles) to identify fragmentation and recursive logic loops dynamically.
+- **CFDI Brake**: Measuring the Confidence-Fidelity Divergence Index to halt execution and mint a Symbolic Scar if an agent's confidence pathologically diverges from valid output.
