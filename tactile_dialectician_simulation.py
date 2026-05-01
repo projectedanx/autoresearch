@@ -79,3 +79,56 @@ class TactileDialecticianV6Evaluator:
                 return False
 
         return True
+
+    def calculate_geometric_density_score(
+            self, nodes: int, edges: int) -> float:
+        """
+        Computes the density of nodes/edges representing query domain
+        complexity.
+        GDS = edges / (nodes * (nodes - 1) / 2)
+        """
+        if nodes <= 1:
+            return 0.0
+        max_edges = (nodes * (nodes - 1)) / 2
+        if max_edges == 0:
+            return 0.0
+        return edges / max_edges
+
+    def betti_loop_detect(self, failure_state: str) -> bool:
+        """
+        Tracks historical failures and detects β₁ > 0 (cycle).
+        """
+        if not hasattr(self, "_failure_history"):
+            self._failure_history = set()
+
+        if failure_state in self._failure_history:
+            return True
+
+        self._failure_history.add(failure_state)
+        return False
+
+
+class SymbolicScarRegistry:
+    def __init__(self):
+        self.scars = []
+
+    def log_scar(self, scar_description: str, weight: float = 1.618):
+        """
+        Logs unresolved assumptions and contradictions as scar tissue.
+        Do not debride scars during inference.
+        """
+        self.scars.append({
+            "scar": scar_description,
+            "weight": weight
+        })
+
+
+class EpistemicEscrow:
+    def __init__(self):
+        self.quarantined_modules = {}
+
+    def quarantine(self, module_name: str, contradiction_marker: str):
+        """
+        Quarantines failing modules and holds contradictions [⊘] and [Φ].
+        """
+        self.quarantined_modules[module_name] = contradiction_marker

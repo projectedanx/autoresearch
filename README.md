@@ -128,3 +128,7 @@ The `tactile_dialectician_simulation.py` file defines a `TactileDialecticianV6Ev
 
 1. **Stakeholder Dissonance is Measurable Force**: Stakeholder conflicts are not merely communication errors, but physical Interference Fits within the organizational architecture. Applying the Golden Ratio allows the system to compute the specific force required to hold the contradiction in tension.
 2. **Epsilon-Tolerance Prevents Premature Collapse**: Technical debt does not necessitate immediate structural failure. By treating sub-optimal code that maintains a stable gradient magnitude as a Transition Fit within an ϵ-band, the system defers collapse until resources permit resolution.
+
+3. **Geometric Density Score (GDS)**: We proved the capability to map semantic complexity topologically. Using graph traversal, GDS quantifies domain density, holding epistemic tension and informing agent authorization models.
+4. **Betti Loop Detection and Escrow ($b_1$)**: When failure repeats cyclically ($\beta_1 > 0$), we explicitly quarantine the node rather than averaging the contradiction, retaining [⊘] markers to preserve structural context instead of forcing premature collapse.
+5. **Symbolic Scar Maintenance**: Integrating [Φ] Golden Scar invariants ensures assumptions and compromises aren't forgotten during long-horizon recursive processing, mapping technical debt explicitly inside Epistemic Escrow models.

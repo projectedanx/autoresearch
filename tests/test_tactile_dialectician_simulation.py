@@ -106,6 +106,44 @@ class TestTactileDialecticianV6Evaluator(unittest.TestCase):
         self.assertFalse(
             self.evaluator.metrological_conformance_check(invalid_fcf))
 
+    def test_calculate_geometric_density_score(self):
+        # A fully connected graph of 4 nodes has 6 edges
+        # GDS = edges / (nodes * (nodes - 1) / 2) = 6 / 6 = 1.0
+        gds_full = self.evaluator.calculate_geometric_density_score(4, 6)
+        self.assertAlmostEqual(gds_full, 1.0)
+
+        # A sparse graph of 4 nodes with 1 edge
+        # GDS = 1 / 6 = 0.1666...
+        gds_sparse = self.evaluator.calculate_geometric_density_score(4, 1)
+        self.assertAlmostEqual(gds_sparse, 0.16666666666666666)
+
+        # 0 nodes or 1 node
+        gds_zero = self.evaluator.calculate_geometric_density_score(0, 0)
+        self.assertAlmostEqual(gds_zero, 0.0)
+
+    def test_betti_loop_detect(self):
+        self.assertFalse(self.evaluator.betti_loop_detect("Failure A"))
+        self.assertFalse(self.evaluator.betti_loop_detect("Failure B"))
+        # Repeating Failure A indicates a loop (Betti-1 > 0)
+        self.assertTrue(self.evaluator.betti_loop_detect("Failure A"))
+
+    def test_symbolic_scar_registry(self):
+        from tactile_dialectician_simulation import SymbolicScarRegistry
+        registry = SymbolicScarRegistry()
+        registry.log_scar("Ontological mismatch", 1.618)
+        self.assertEqual(len(registry.scars), 1)
+        self.assertEqual(registry.scars[0]["scar"], "Ontological mismatch")
+        self.assertEqual(registry.scars[0]["weight"], 1.618)
+
+    def test_epistemic_escrow(self):
+        from tactile_dialectician_simulation import EpistemicEscrow
+        escrow = EpistemicEscrow()
+        escrow.quarantine("Module_X", "[⊘] Mutually exclusive requirements")
+        self.assertIn("Module_X", escrow.quarantined_modules)
+        self.assertEqual(
+            escrow.quarantined_modules["Module_X"],
+            "[⊘] Mutually exclusive requirements")
+
 
 if __name__ == '__main__':
     unittest.main()
