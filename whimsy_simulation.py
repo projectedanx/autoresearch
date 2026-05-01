@@ -32,9 +32,10 @@ class WhimsyTopologyEvaluator:
         in a failing scar, returns True (indicating proximity to previous
         failure).
         """
+        query_tags = set(context_tags)
         for scar in self.scars:
             s_tags = set(scar.get("context_tag", []))
-            if set(context_tags).intersection(s_tags):
+            if query_tags.intersection(s_tags):
                 return True
         return False
 
