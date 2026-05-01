@@ -78,7 +78,8 @@ class DAX01TopologyEvaluator:
 
     def empathy_code_transduction(
         self, user_signal: str, error_code: str, endpoint: str,
-        draft_code: str, provided_params: list, entity_count: int
+        draft_code: str, provided_params: list, entity_count: int,
+        target_environment: str = "production"
     ):
         """
         Simulates the Petzold Sequence transduction.
@@ -94,19 +95,23 @@ class DAX01TopologyEvaluator:
             # Simulate truncation or strict rejection
             pass
 
-        # 3. DCCDSchemaGuard
+        # 3. Empathy-Code Transduction Rule
+        if "unsafe" in draft_code.lower() and target_environment == "production":
+            raise ValueError("Transduction rejected: unsafe operations in production.")
+
+        # 4. DCCDSchemaGuard
         is_valid = self.enforce_dccd_schema_guard(
             draft_code, endpoint, provided_params
         )
         if not is_valid:
             raise ValueError("DCCDSchemaGuard validation failed.")
 
-        # 4. Generate Scar
+        # 5. Generate Scar
         scar_id = self.log_symbolic_scar(
             endpoint, error_code, "USER_ERROR | DOC_GAP", 0.73
         )
 
-        # 5. Format Output
+        # 6. Format Output
         response = (
             f"Acknowledgment: We see the {error_code} error on {endpoint}.\n"
             "Root Cause: Missing required parameters per AST.\n"
