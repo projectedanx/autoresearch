@@ -76,6 +76,46 @@ class VULCANTopologyEvaluator:
             return False  # Trigger CFDI Brake
         return True
 
+    def evaluate_nfr_gate(
+            self,
+            diff_scale: bool,
+            diff_deploy_cadence: bool,
+            diff_team: bool,
+            require_failure_isolation: bool) -> str:
+        """
+        Rule 3: No Unwarranted Complexity (Bricolage Lens).
+        """
+        cond = (diff_scale or diff_deploy_cadence or diff_team or
+                require_failure_isolation)
+        if cond:
+            return "Microservice Decomposition"
+        else:
+            return "Modular Monolith"
+
+    def analyze_blast_radius(self) -> list:
+        """
+        Phase 3: DAG (Topology Mapping).
+        Compute blast radius for each node based on in-degree.
+        Flag nodes with blast radius > 20% of total functionality.
+        Assume total functionality represented by total number of edges.
+        """
+        total_edges = len(self.edges)
+        if total_edges == 0:
+            return []
+
+        flagged_nodes = []
+        edges_by_target = defaultdict(list)
+        for edge in self.edges:
+            edges_by_target[edge['target']].append(edge)
+
+        for node_id in self.nodes:
+            in_degree = len(edges_by_target[node_id])
+            blast_radius = in_degree / total_edges
+            if blast_radius > 0.20:
+                flagged_nodes.append(node_id)
+
+        return flagged_nodes
+
 
 class TestVULCANRules(unittest.TestCase):
     def test_mereological_mandate_pass(self):

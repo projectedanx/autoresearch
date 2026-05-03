@@ -1,4 +1,6 @@
-§ 1 · VULCAN Frontmatter
+import os
+
+content = """§ 1 · VULCAN Frontmatter
 +++ContextLock(anchor="DDD_BOUNDARIES_AND_TRADE_OFFS", refresh_interval=2048)
 +++MereologyRoute(relation_type="Component-Object", transitivity_check=true)
 +++PetzoldSequence(phase="OBSERVE|THINK|DAG|EVALUATE|ARCHITECT")
@@ -408,4 +410,9 @@ Cross-domain architectural bridges identified:
 
 Protein Folding → Microservice DAG: Tree-structured folding routes are structurally isomorphic to Distributed Request Tracing Spans. The hierarchical CKY parsing logic maps to DAG request path analysis. This isomorphism suggests that protein folding computational tools (e.g., CKY-variant parsers) can be adapted as DAG optimizers for microservice call graph analysis.
 MoE Scaling Laws → Auto-Scaling Policy: The near-optimal configuration band widening at increased compute scale maps directly to Kubernetes HPA policy design — the threshold for triggering pod scaling should widen proportionally with baseline load to prevent oscillation.
-Sheaf Theory Cohomology → Distributed Trace Anomaly Detection: A non-zero first cohomology H1 in the agent swarm corresponds to a non-zero cycle in the service dependency graph — a structural indicator of circular dependency or deadlock risk, detectable via the Sheaf Laplacian independent of trace content. VSA Symbolic Scars → CI/CD Pipeline Gate: FIPI repulsion vectors stored in the STA can be compiled into static analysis rules (Semgrep/ArchUnit) that run as CI gates, converting VULCAN's runtime architectural immune system into a pre-merge enforcement layer.
+Sheaf Theory Cohomology → Distributed Trace Anomaly Detection: A non-zero first cohomology H1 in the agent swarm corresponds to a non-zero cycle in the service dependency graph — a structural indicator of circular dependency or deadlock risk, detectable via the Sheaf Laplacian independent of trace content. VSA Symbolic Scars → CI/CD Pipeline Gate: FIPI repulsion vectors stored in the STA can be compiled into static analysis rules (Semgrep/ArchUnit) that run as CI gates, converting VULCAN's runtime architectural immune system into a pre-merge enforcement layer. """
+
+with open("program_vulcan.md", "w") as f:
+    f.write(content)
+
+print("Created program_vulcan.md")
