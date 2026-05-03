@@ -47,6 +47,13 @@ Hi have a look at program.md and let's kick off a new experiment! let's do the s
 
 The `program.md` file is essentially a super lightweight "skill".
 
+
+## Mixture of Engineers
+
+We have integrated the **Mixture of Engineers (P0-P8)** architecture that acts as a deep reasoning swarm orchestrated via the Petzold sequence (THINK -> WRITE -> CODE -> REVIEW).
+See `program_mixture_of_engineers.md` for the comprehensive 5000+ words agent definition and `moe_simulation.py` for its functional validation.
+Lessons Learned: Integrating the Petzold sequence ensures explicit separation of semantic lock, strategic layout, and syntactic execution, significantly minimizing Epistemic Drift.
+
 ## Project structure
 
 ```
