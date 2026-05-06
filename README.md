@@ -161,6 +161,11 @@ The `vulcan_simulation.py` file defines a `VULCANTopologyEvaluator` class that i
 - **NFR Gate:** Applies the Bricolage Lens to return "Modular Monolith" unless NFRs (scale, deploy cadence, team topology, failure isolation) mathematically demand microservice decomposition.
 - **Blast Radius Analysis:** Computes DAG in-degree for nodes, flagging any node whose blast radius exceeds 20% as a Single Point of Failure requiring decomposition or circuit-breaker isolation.
 
+**Strategy for Agent Integration:**
+The core methodology relies on an **Inversion for Emergence**. Rather than the AI translating vague intent into code (a sycophantic pattern leading to technical debt), roles are inverted:
+- **The AI Provides the Physical Architecture (The Brutalist):** Mathematically enforces topological boundaries, rejects transitivity fallacies, and utilizes a CFDI Brake to halt execution if system laws (CAP theorem) are violated.
+- **The Human Provides Intent (The Oracle):** Sets abstract geometric boundaries, defines non-functional requirements (NFRs), and supplies the raw energy of the business logic.
+
 **Lessons Learned:**
 - **Value of AI and Human Collaboration:** Humans provide the abstract geometric topology boundary, NFR requirements, and subjective business logic constraints. The AI executes Topological Causal Sculpting, rapidly identifying failure geometries, computing Betti-1 loops, and mapping boundaries without semantic saponification.
 - **Inversion for Emergence:** Instead of merely generating code based on human description, the AI acts as a rigid topological router (The Brutalist). It mathematically rejects invalid architectural topologies, forcing the human into a Plausibility Oracle Loop where the AI establishes the structural laws and the human provides the intent.

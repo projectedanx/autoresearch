@@ -1,14 +1,16 @@
+from dax_01_simulation import DAX01TopologyEvaluator
 import unittest
 import sys
 import os
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from dax_01_simulation import DAX01TopologyEvaluator
+sys.path.insert(0, os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '..')))
+
 
 class TestDAX01TopologyEvaluator(unittest.TestCase):
     def setUp(self):
         self.evaluator = DAX01TopologyEvaluator()
-        self.draft_code = 'client.post("/api/v2/auth", data={"t": "abc", "c": "123"})'
+        self.draft_code = 'client.post("/api/v2/auth", data={"t": "abc", "c": "123"})'  # noqa: E501
 
     def test_successful_transduction(self):
         """Happy Path: Standard successful transduction"""
@@ -49,7 +51,8 @@ class TestDAX01TopologyEvaluator(unittest.TestCase):
                 ["token"],
                 10
             )
-        self.assertIn("DCCDSchemaGuard validation failed", str(context.exception))
+        self.assertIn("DCCDSchemaGuard validation failed",
+                      str(context.exception))
 
     def test_unsafe_operations_in_production(self):
         """Error Case: Unsafe operations in production environment"""
@@ -64,10 +67,11 @@ class TestDAX01TopologyEvaluator(unittest.TestCase):
                 10,
                 target_environment="production"
             )
-        self.assertIn("Transduction rejected: unsafe operations in production.", str(context.exception))
+        self.assertIn("Transduction rejected: unsafe operations in production.", str(  # noqa: E501
+            context.exception))
 
     def test_unsafe_operations_in_development(self):
-        """Happy Path: Unsafe operations are allowed in non-production environment"""
+        """Happy Path: Unsafe operations are allowed in non-production environment"""  # noqa: E501
         unsafe_code = 'import os; os.system("rm -rf /") # unsafe'
         res = self.evaluator.empathy_code_transduction(
             "Fix for cleanup.",
@@ -85,6 +89,7 @@ class TestDAX01TopologyEvaluator(unittest.TestCase):
         # SSI for empty text should be 1.0 per implementation
         ssi = self.evaluator.calculate_ssi("", 10)
         self.assertEqual(ssi, 1.0)
+
 
 if __name__ == '__main__':
     unittest.main()

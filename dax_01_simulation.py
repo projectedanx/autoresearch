@@ -4,6 +4,7 @@ class DAX01TopologyEvaluator:
     Implements the DCCDSchemaGuard, Semantic Saponification Index (SSI),
     and Empathy-Code Transduction.
     """
+
     def __init__(self):
         self.scar_registry = []
         self.ast_mock = {
@@ -96,8 +97,9 @@ class DAX01TopologyEvaluator:
             pass
 
         # 3. Empathy-Code Transduction Rule
-        if "unsafe" in draft_code.lower() and target_environment == "production":
-            raise ValueError("Transduction rejected: unsafe operations in production.")
+        if "unsafe" in draft_code.lower() and target_environment == "production":  # noqa: E501
+            raise ValueError(
+                "Transduction rejected: unsafe operations in production.")
 
         # 4. DCCDSchemaGuard
         is_valid = self.enforce_dccd_schema_guard(
