@@ -769,7 +769,7 @@ success_metrics:
 
 def main():
     output_file = "program_axiom.md"
-    with open(output_file, "w") as f:
+    with open(output_file, "w", encoding="utf-8") as f:
         f.write(AXIOM_MARKDOWN)
     print(f"Successfully generated {output_file}")
 
