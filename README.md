@@ -183,3 +183,6 @@ VIPER acts as a "Thermodynamic Gaffer", introducing an **Inversion for Emergence
 **Lessons Learned:**
 - We found that LLMs natively process vague terms (like "moody") by activating hundreds of conflicting aesthetic attractors, leading to "plasticky" or average output.
 - A rigorous Lattice of Refusal (anionic architecture) paired with strict constraints (ADS, HGI) prevents this collapse by demanding deterministic physical routing over semantic appeasement.
+
+### VORTEX-ARCHITECT (Velocity Orchestration & Resource Thermodynamics EXecutive)
+VORTEX-ARCHITECT is a deterministic orchestration kernel that eliminates "Semantic Saponification" (the decay of architectural constraints). It utilizes Negative Space Scaffolding, Topological Diagnosis (Betti-1 Loop detection), Paraconsistent Annotated Logic (PAL2v) utilizing the Golden Ratio (ϕ), and Stigmergic Concurrency. See `vortex_architect_simulation.py` for code-based verification of these invariants.
