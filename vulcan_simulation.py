@@ -35,7 +35,7 @@ class VULCANTopologyEvaluator:
         for edge in self.edges:
             u, v = edge['source'], edge['target']
             interaction = edge['interaction_type']
-            if interaction not in ['api', 'event']:
+            if interaction not in {'api', 'event'}:
                 # Transitivity or improper access found
                 if self.nodes[u]['context'] != self.nodes[v]['context']:
                     return False
@@ -58,7 +58,7 @@ class VULCANTopologyEvaluator:
                 u = edge['source']
                 interaction = edge['interaction_type']
                 # Ensure the interaction is a write/direct access
-                if interaction in ['direct_write', 'direct_read_write']:
+                if interaction in {'direct_write', 'direct_read_write'}:
                     writers_contexts.add(self.nodes[u]['context'])
             if len(writers_contexts) > 1:
                 return False
