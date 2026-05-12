@@ -1,5 +1,6 @@
 from dax_01_simulation import DAX01TopologyEvaluator
 import unittest
+import pytest
 import sys
 import os
 
@@ -28,7 +29,7 @@ class TestDAX01TopologyEvaluator(unittest.TestCase):
 
     def test_anionic_veto(self):
         """Error Case: Anionic Veto triggered"""
-        with self.assertRaises(ValueError) as context:
+        with pytest.raises(ValueError, match="Anionic Veto triggered"):
             self.evaluator.empathy_code_transduction(
                 "This is a revolutionary fix.",
                 "401",
@@ -37,12 +38,11 @@ class TestDAX01TopologyEvaluator(unittest.TestCase):
                 ["token", "client_id"],
                 10
             )
-        self.assertIn("Anionic Veto triggered", str(context.exception))
 
     def test_dccd_schema_guard_failure(self):
         """Error Case: DCCDSchemaGuard validation failure"""
         bad_code = 'client.post("/api/v2/auth", data={"token": "abc"})'
-        with self.assertRaises(ValueError) as context:
+        with pytest.raises(ValueError, match="DCCDSchemaGuard validation failed"):  # noqa: E501
             self.evaluator.empathy_code_transduction(
                 "We see the issue.",
                 "401",
@@ -51,13 +51,11 @@ class TestDAX01TopologyEvaluator(unittest.TestCase):
                 ["token"],
                 10
             )
-        self.assertIn("DCCDSchemaGuard validation failed",
-                      str(context.exception))
 
     def test_unsafe_operations_in_production(self):
         """Error Case: Unsafe operations in production environment"""
         unsafe_code = 'import os; os.system("rm -rf /") # unsafe'
-        with self.assertRaises(ValueError) as context:
+        with pytest.raises(ValueError, match="Transduction rejected: unsafe operations in production."):  # noqa: E501
             self.evaluator.empathy_code_transduction(
                 "Fix for cleanup.",
                 "401",
@@ -67,8 +65,6 @@ class TestDAX01TopologyEvaluator(unittest.TestCase):
                 10,
                 target_environment="production"
             )
-        self.assertIn("Transduction rejected: unsafe operations in production.", str(  # noqa: E501
-            context.exception))
 
     def test_unsafe_operations_in_development(self):
         """Happy Path: Unsafe operations are allowed in non-production environment"""  # noqa: E501
@@ -89,6 +85,25 @@ class TestDAX01TopologyEvaluator(unittest.TestCase):
         # SSI for empty text should be 1.0 per implementation
         ssi = self.evaluator.calculate_ssi("", 10)
         self.assertEqual(ssi, 1.0)
+
+    def test_enforce_dccd_schema_guard_missing_endpoint(self):
+        """Edge Case: Endpoint not in AST mock returns False immediately"""
+        is_valid = self.evaluator.enforce_dccd_schema_guard(
+            self.draft_code, "/nonexistent/endpoint", ["token", "client_id"]
+        )
+        self.assertFalse(is_valid)
+
+    def test_empathy_code_transduction_low_ssi(self):
+        """Edge Case: Low SSI condition hit"""
+        res = self.evaluator.empathy_code_transduction(
+            "auth failed",  # 2 words
+            "401",
+            "/api/v2/auth",
+            self.draft_code,
+            ["token", "client_id"],
+            1  # 1 / 2 = 0.5 SSI
+        )
+        self.assertIn("Expected Output: 200 OK", res)
 
 
 if __name__ == '__main__':
