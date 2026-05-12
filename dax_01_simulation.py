@@ -126,7 +126,7 @@ class DAX01TopologyEvaluator:
         return response
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":  # pragma: no cover
     evaluator = DAX01TopologyEvaluator()
 
     # Test 1: Successful transduction
