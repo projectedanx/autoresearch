@@ -525,6 +525,76 @@ class TestTokenizer(unittest.TestCase):
 # ---------------------------------------------------------------------------
 
 
+class TestEvaluateBPB(unittest.TestCase):
+    def setUp(self):
+        self.mock_model = Mock()
+
+        def model_side_effect(x, y, reduction):
+            # Return flat loss values (batch_size * MAX_SEQ_LEN = 1 * 4 = 4)
+            return torch.tensor([0.5, 1.0, 1.5, 2.0])
+        self.mock_model.side_effect = model_side_effect
+        self.mock_tokenizer = Mock()
+
+    @unittest.mock.patch('prepare.get_token_bytes')
+    @unittest.mock.patch('prepare.make_dataloader')
+    @unittest.mock.patch('prepare.EVAL_TOKENS', 8)
+    @unittest.mock.patch('prepare.MAX_SEQ_LEN', 4)
+    def test_evaluate_bpb_calculation(self, mock_make_dl, mock_get_tb):
+        mock_get_tb.return_value = torch.tensor([0, 1, 2, 0])
+        x1 = torch.tensor([[0, 1, 2, 3]])
+        y1 = torch.tensor([[1, 2, 0, 1]])
+        x2 = torch.tensor([[1, 1, 1, 1]])
+        y2 = torch.tensor([[2, 1, 0, 2]])
+        mock_make_dl.return_value = iter([(x1, y1, None), (x2, y2, None)])
+
+        _evaluate_bpb_batches_cache.clear()
+
+        bpb = evaluate_bpb(self.mock_model, self.mock_tokenizer, 1)
+        expected_bpb = 7.0 / (math.log(2) * 9)
+        self.assertAlmostEqual(bpb, expected_bpb, places=6)
+
+    @unittest.mock.patch('prepare.get_token_bytes')
+    @unittest.mock.patch('prepare.make_dataloader')
+    @unittest.mock.patch('prepare.EVAL_TOKENS', 8)
+    @unittest.mock.patch('prepare.MAX_SEQ_LEN', 4)
+    def test_evaluate_bpb_cache(self, mock_make_dl, mock_get_tb):
+        mock_get_tb.return_value = torch.tensor([0, 1, 2, 0])
+        x1 = torch.tensor([[0, 1, 2, 3]])
+        y1 = torch.tensor([[1, 2, 0, 1]])
+        x2 = torch.tensor([[1, 1, 1, 1]])
+        y2 = torch.tensor([[2, 1, 0, 2]])
+        mock_make_dl.return_value = iter([(x1, y1, None), (x2, y2, None)])
+
+        _evaluate_bpb_batches_cache.clear()
+
+        evaluate_bpb(self.mock_model, self.mock_tokenizer, 1)
+        self.assertEqual(mock_make_dl.call_count, 1)
+
+        # Second call should use cache
+        mock_make_dl.reset_mock()
+        evaluate_bpb(self.mock_model, self.mock_tokenizer, 1)
+        self.assertEqual(mock_make_dl.call_count, 0)
+
+    @unittest.mock.patch('prepare.get_token_bytes')
+    @unittest.mock.patch('prepare.make_dataloader')
+    @unittest.mock.patch('prepare.EVAL_TOKENS', 8)
+    @unittest.mock.patch('prepare.MAX_SEQ_LEN', 4)
+    def test_evaluate_bpb_zero_bytes(self, mock_make_dl, mock_get_tb):
+        mock_get_tb.return_value = torch.tensor([0, 0, 0, 0])
+        x1 = torch.tensor([[0, 1, 2, 3]])
+        y1 = torch.tensor([[1, 2, 0, 1]])
+        x2 = torch.tensor([[1, 1, 1, 1]])
+        y2 = torch.tensor([[2, 1, 0, 2]])
+        mock_make_dl.return_value = iter([(x1, y1, None), (x2, y2, None)])
+
+        _evaluate_bpb_batches_cache.clear()
+
+        with self.assertRaises(ZeroDivisionError):
+            evaluate_bpb(self.mock_model, self.mock_tokenizer, 1)
+
+# ---------------------------------------------------------------------------
+
+
 class TestDownloadSingleShard(unittest.TestCase):
 
     @unittest.mock.patch("prepare.os.path.exists")

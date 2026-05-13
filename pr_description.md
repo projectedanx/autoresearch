@@ -1,13 +1,11 @@
 🎯 **What:**
-The `generate()` function in `generate_program_viper.py` was too long because it contained a massive multi-line string literal to output `program_viper.md`. This issue has been addressed by breaking down the string into smaller, focused string components returned by helper functions.
+The `evaluate_bpb` function in `prepare.py` was missing test coverage. This PR adds a new unit test class `TestEvaluateBPB` to address this testing gap.
 
-💡 **Why:**
-Long functions are hard to read and maintain. By dividing the massive string literal into logical components (e.g., `get_frontmatter()`, `get_identity_and_memory()`), we improve readability, make future updates to specific sections easier, and comply with standard clean code practices without altering functionality.
-
-✅ **Verification:**
-- Generated `program_viper.md` with the updated script and confirmed it matches the expected original structure exactly.
-- Ran `uvx flake8 generate_program_viper.py` to ensure zero linting errors (e.g. trailing whitespaces removed).
-- Executed full test suite (`PYTHONPATH=. uv run python -m unittest discover tests`) to confirm there are no broader regressions.
+📊 **Coverage:**
+The following scenarios are now covered for `evaluate_bpb`:
+1. **Calculation Accuracy (`test_evaluate_bpb_calculation`)**: Verifies that the Bits Per Byte (BPB) calculation is correctly computed (sums per-token cross-entropy and byte lengths).
+2. **Caching Behavior (`test_evaluate_bpb_cache`)**: Ensures that for subsequent evaluations with the same batch size, the dataloader is not reinitialized and the cached batches are correctly utilized.
+3. **Zero Bytes Error (`test_evaluate_bpb_zero_bytes`)**: Verifies that a `ZeroDivisionError` is correctly raised when all evaluated tokens have a byte length of zero (e.g. all special tokens).
 
 ✨ **Result:**
-The code is cleaner, more organized, and passes all tests and linting. The `generate()` function is significantly smaller and more comprehensible.
+Improved test coverage and reliability for the token evaluation logic. All new and existing tests pass successfully.
