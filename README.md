@@ -79,5 +79,9 @@ A new structural paradigm for transformers that replaces traditional loss-based 
 - **Focus:** Bridging human empirical friction and AI paraconsistency.
 - **Key Features:** Utilizes SpatialBind (FuzzyRCC-8) for physical site planning logic, enforcing constraints to prevent continuous boundary violations. See `persona_metrology_simulation.py` and `program_persona_metrology.md`.
 
+### 10. Next.js Frontend Agent
+- **Focus:** RAG (Retrieval-Augmented Generation) and multi-agent frontend routing.
+- **Key Features:** Routes user requests to appropriate specialized agents (e.g., Cipher, Vulcan, Dax-01) based on user context and intent. Enforces DCCDSchemaGuard for UI component ASTs and limits evaluative language via AdjectivalBound constraints. See `nextjs_frontend_simulation.py` and `program_nextjs_frontend.md`.
+
 ## License
 MIT
