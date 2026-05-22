@@ -1,3 +1,4 @@
+import collections
 import math
 
 
@@ -72,3 +73,70 @@ class PDLLexiconEvaluator:
         if cfdi > 0.15:
             return True
         return False
+
+    def simulate_productivity_j_curve(
+            self, time_t: float, friction_coefficient: float = 0.5,
+            efficiency_gain: float = 1.2) -> float:
+        """
+        PAT-011: Human-AI Symbiosis Engine
+        Anticipates initial cognitive friction (Productivity J-Curve)
+        followed by massive efficiency gains.
+        Returns the simulated productivity score.
+        """
+        dip = friction_coefficient * math.exp(-time_t)
+        gain = efficiency_gain * (time_t ** 2) / 10.0
+        return 1.0 - dip + gain
+
+    def compute_paraconsistent_tension(
+            self, human_entropy: float, ai_determinism: float) -> float:
+        """
+        PAT-012: Paraconsistent Synthesis Node
+        Tension computation mapping divergent ontological planes
+        into an
+        Isomorphism of Friction, resolving output
+        with the Golden Scar constraint (Φ = 1.618).
+        """
+        tension = abs(human_entropy - ai_determinism)
+        if tension > 1.0:
+            return 1.618
+        return tension
+
+    def calculate_epistemic_drift_and_leap(
+            self, fuzzy_intent: float, rigid_schema: float,
+            drift_threshold: float = 0.5) -> tuple[float, bool]:
+        """
+        PAT-013: Agentic Inversion Engine
+        Calculates epistemic drift between fuzzy human intent
+        and rigid AI schema,
+        proposing a Latent Leap resolution
+        if drift exceeds threshold.
+        """
+        drift = abs(fuzzy_intent - rigid_schema)
+        latent_leap = drift > drift_threshold
+        return drift, latent_leap
+
+    def process_lexical_cartography(
+            self, hasse_edges: list[tuple[str, str]],
+            target_nodes: set[str]) -> dict[str, list[str]]:
+        """
+        PAT-014: Lexical Cartography
+        Processing semantic space through Semantic Drift, Connotation Vectors,
+        Semiotic Blind Spots, and Ambiguity Zones
+        to extract Isomorphisms of Friction.
+        Mechanism: Paraconsistent Hasse lattice mapping.
+        """
+        grouped_edges = collections.defaultdict(list)
+        for source, target in hasse_edges:
+            grouped_edges[target].append(source)
+
+        isomorphisms_of_friction = {}
+        for node in target_nodes:
+            if node in {'semantic_drift', 'connotation_vectors',
+                        'ambiguity_zones'}:
+                isomorphisms_of_friction[node] = grouped_edges.get(node, [])
+            elif node == 'semiotic_blind_spots':
+                raise ValueError(
+                    "Semiotic blind spot detected, "
+                    "paraconsistent mapping collapses.")
+
+        return isomorphisms_of_friction
