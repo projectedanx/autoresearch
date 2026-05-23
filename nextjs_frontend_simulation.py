@@ -40,6 +40,23 @@ class NextjsFrontendEvaluator:
             return required_keys.issubset(data.keys())
         return False
 
+    def _check_adjectival_bound(self, intent: str) -> bool:
+        words = intent.split()
+        banned_adj = ["revolutionary", "fast", "seamless",
+                      "disruptive", "amazing"]
+        adjective_count = sum(1 for word in words if word.lower()
+                              in banned_adj)
+        return adjective_count <= 2
+
+    def _determine_target_agent(self, intent: str) -> str:
+        if "security" in intent or "trust" in intent:
+            return "cipher"
+        elif "developer" in intent or "code" in intent:
+            return "dax-01"
+        elif "validation" in intent or "ingress" in intent:
+            return "kira-7"
+        return "vulcan"
+
     def route_request(self, user_id: str, data: dict) -> dict:
         """
         Routes the user request to the appropriate agent \
@@ -55,25 +72,14 @@ class NextjsFrontendEvaluator:
         intent = data.get("agent_intent", "")
 
         # Enforce AdjectivalBound (max 2 limit)
-        words = intent.split()
-        banned_adj = ["revolutionary", "fast", "seamless",
-                      "disruptive", "amazing"]
-        adjective_count = sum(1 for word in words if word.lower()
-                              in banned_adj)
-        if adjective_count > 2:
+        if not self._check_adjectival_bound(intent):
             return {
                 "error": "AdjectivalBound exceeded. "
                          "Too many evaluative adjectives."
             }
 
         # Determine the target agent
-        target_agent = "vulcan"  # Default fallback
-        if "security" in intent or "trust" in intent:
-            target_agent = "cipher"
-        elif "developer" in intent or "code" in intent:
-            target_agent = "dax-01"
-        elif "validation" in intent or "ingress" in intent:
-            target_agent = "kira-7"
+        target_agent = self._determine_target_agent(intent)
 
         # Log the request
         self.request_logs.append({
