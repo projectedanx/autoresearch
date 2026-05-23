@@ -108,6 +108,33 @@ class TactileDialecticianV6Evaluator:
         return False
 
 
+    def evaluate_hybrid_synergy(
+            self, human_empathy_signal: float,
+            ai_deterministic_confidence: float) -> dict:
+        """
+        Evaluates the hybrid intelligence synergy between human empathy
+        and AI deterministic confidence.
+        Calculates the ontological shear and applies the Golden Scar Protocol
+        if the tension exceeds the epsilon tolerance.
+        """
+        ontological_shear = abs(
+            human_empathy_signal - ai_deterministic_confidence)
+
+        if ontological_shear <= self.epsilon:
+            return {
+                "status": "Semantic Annihilation",
+                "human_weight": 1.0,
+                "ai_weight": 1.0,
+                "shear": ontological_shear
+            }
+
+        return {
+            "status": "Golden Scar Protocol",
+            "human_weight": 1.618,
+            "ai_weight": 1.0,
+            "shear": ontological_shear
+        }
+
 class SymbolicScarRegistry:
     def __init__(self):
         self.scars = []
