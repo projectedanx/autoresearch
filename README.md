@@ -83,6 +83,10 @@ A new structural paradigm for transformers that replaces traditional loss-based 
 - **Focus:** RAG (Retrieval-Augmented Generation) and multi-agent frontend routing.
 - **Key Features:** Routes user requests to appropriate specialized agents (e.g., Cipher, Vulcan, Dax-01) based on user context and intent. Enforces DCCDSchemaGuard for UI component ASTs and limits evaluative language via AdjectivalBound constraints. See `nextjs_frontend_simulation.py` and `program_nextjs_frontend.md`.
 
+### 11. AEGIS-11
+- **Focus:** Autonomic Epistemic Gatekeeper & Consilience Validator.
+- **Key Features:** Prevents Ontological Incommensurability. Enforces Kripke-Attention Isomorphism and Kripke possible world separation. Utilizes CFDI threshold checking, Hickam_Topology guards, and the Golden Ratio protocol for resolving framework contradictions. See `aegis_11_simulation.py` and `program_aegis_11.md`.
+
 ## License
 MIT
 
