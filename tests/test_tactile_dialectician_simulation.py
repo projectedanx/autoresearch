@@ -127,6 +127,25 @@ class TestTactileDialecticianV6Evaluator(unittest.TestCase):
         # Repeating Failure A indicates a loop (Betti-1 > 0)
         self.assertTrue(self.evaluator.betti_loop_detect("Failure A"))
 
+    def test_evaluate_hybrid_synergy_semantic_annihilation(self):
+        result = self.evaluator.evaluate_hybrid_synergy(5.0, 5.0)
+        self.assertEqual(result["status"], "Semantic Annihilation")
+        self.assertEqual(result["human_weight"], 1.0)
+        self.assertEqual(result["ai_weight"], 1.0)
+        self.assertAlmostEqual(result["shear"], 0.0)
+
+        # Within epsilon
+        result = self.evaluator.evaluate_hybrid_synergy(
+            5.0, 5.0 + (self.evaluator.epsilon / 2))
+        self.assertEqual(result["status"], "Semantic Annihilation")
+
+    def test_evaluate_hybrid_synergy_golden_scar_protocol(self):
+        result = self.evaluator.evaluate_hybrid_synergy(2.0, 8.0)
+        self.assertEqual(result["status"], "Golden Scar Protocol")
+        self.assertEqual(result["human_weight"], 1.618)
+        self.assertEqual(result["ai_weight"], 1.0)
+        self.assertAlmostEqual(result["shear"], 6.0)
+
     def test_symbolic_scar_registry(self):
         from tactile_dialectician_simulation import SymbolicScarRegistry
         registry = SymbolicScarRegistry()
