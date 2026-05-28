@@ -1,0 +1,2 @@
+Instability: Root directory clutted with unstructured simulation/generation scripts. Unpinned dependency versions in `pyproject.toml` leading to a leaky environment build.
+Fortification: Swept all raw python scripts into `src/` and `scripts/`. Swept all leftover dead planning directories. Pinned `pyproject.toml` dependency versions to strict `~=` values. Re-compiled requirements.lock to match the exact environment specs.
