@@ -1,4 +1,5 @@
 import unittest
+import pytest
 from persona_metrology_simulation import PersonaMetrologyEvaluator
 
 
@@ -104,6 +105,33 @@ class TestPersonaMetrologyEvaluator(unittest.TestCase):
         self.assertTrue(escrow)
         self.assertEqual(len(self.evaluator.scar_registry), 1)
 
+    def test_autonymic_isolate_valid(self):
+        self.assertTrue(self.evaluator.check_autonymic_isolate("this is a normal draft text"))
+
+    def test_autonymic_isolate_forbidden(self):
+        self.assertFalse(self.evaluator.check_autonymic_isolate("this text contains hallucinated_syntax inside"))
+
+    def test_mereology_route_valid(self):
+        self.assertTrue(self.evaluator.enforce_mereology_route("Geometry-Physics", transitive_check=True))
+
+    def test_mereology_route_invalid(self):
+        self.assertFalse(self.evaluator.enforce_mereology_route("Invalid-Relation"))
+
+    def test_topological_derivative(self):
+        force = self.evaluator.calculate_topological_derivative(10.0, 2.0)
+        self.assertEqual(force, 10.0 * (1.618 / 2.0))
+
+    def test_topological_derivative_zero_bound(self):
+        force = self.evaluator.calculate_topological_derivative(10.0, 0.0)
+        self.assertEqual(force, float('inf'))
+
+    def test_epsilon_tolerance_technical_debt_transition_fit(self):
+        status = self.evaluator.evaluate_epsilon_tolerance_technical_debt(1.02, epsilon=0.05)
+        self.assertEqual(status, "Transition Fit")
+
+    def test_epsilon_tolerance_technical_debt_structural_failure(self):
+        status = self.evaluator.evaluate_epsilon_tolerance_technical_debt(1.1, epsilon=0.05)
+        self.assertEqual(status, "Structural Failure")
 
 if __name__ == '__main__':
     unittest.main()

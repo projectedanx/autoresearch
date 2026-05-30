@@ -1,5 +1,5 @@
 import math
-from typing import Dict, Any, Tuple, List
+from typing import Dict, Any, Tuple, List, Set
 
 
 class PersonaMetrologyEvaluator:
@@ -7,16 +7,62 @@ class PersonaMetrologyEvaluator:
     Simulates the Persona Metrology Architecture.
     Implements SpatialBind (FuzzyRCC-8), DCCDSchemaGuard (PD&T Metrology),
     Contradiction Retention Score (CRS), and Confidence-Fidelity Divergence
-    Index (CFDI).
+    Index (CFDI), AutonymicIsolate, MereologyRoute, Topological Derivative of
+    Stakeholder Dissonance, and Epsilon-Tolerance Paraconsistency.
     """
 
     def __init__(self):
         self.scar_registry = []
-        self.active_context_lock = "EMPIRICAL_ALIGNMENT"
+        self.active_context_lock = "PERSONA_EMPIRICAL_MATRIX"
         self.pdt_schemas = {
             "F1_Executive_Summary": {"NOMINAL": 250, "LMC": 200, "MMC": 300},
             "F3_Emergent_Concepts": {"NOMINAL": 3, "LMC": 3, "MMC": 5}
         }
+        self.forbidden_patterns = {"hallucinated_syntax"}
+        self.mereological_relations = {"Geometry-Physics"}
+
+    def check_autonymic_isolate(self, draft_text: str) -> bool:
+        """
+        Enforces AutonymicIsolate by detecting forbidden patterns.
+        Treats the output as a mention if it contains forbidden syntax,
+        effectively blinding heuristics and preserving constraints.
+        Returns False if a forbidden pattern is used, True otherwise.
+        """
+        for pattern in self.forbidden_patterns:
+            if pattern in draft_text:
+                return False
+        return True
+
+    def enforce_mereology_route(self, relation: str, transitive_check: bool = True) -> bool:
+        """
+        Enforces MereologyRoute to prevent transitivity fallacies.
+        Only allows formal classifications like 'Geometry-Physics'.
+        """
+        if relation in self.mereological_relations:
+            if transitive_check:
+                # Mock simulation logic for transitivity verification
+                return True
+            return True
+        return False
+
+    def calculate_topological_derivative(self, dissonance_magnitude: float, attention_bound: float) -> float:
+        """
+        Models the Topological Derivative of Stakeholder Dissonance using S5-Modal Attention bounds.
+        Calculates the required organizational force to lock the project structure together.
+        """
+        if attention_bound == 0:
+            return float('inf')
+        return dissonance_magnitude * (1.618 / attention_bound)
+
+    def evaluate_epsilon_tolerance_technical_debt(self, gradient_magnitude: float, epsilon: float = 0.05) -> str:
+        """
+        Models Epsilon-Tolerance Paraconsistency of Technical Debt.
+        Allows sub-optimal states (Transition Fit) if the gradient magnitude is within epsilon of 1.
+        Otherwise it's considered a Structural Failure.
+        """
+        if abs(gradient_magnitude - 1.0) <= epsilon:
+            return "Transition Fit"
+        return "Structural Failure"
 
     def enforce_spatial_bind(
         self, agent_pos: float, boundary_pos: float, tolerance: float = 0.15
@@ -125,7 +171,6 @@ class PersonaMetrologyEvaluator:
 
         return crs, cfdi, escrow_triggered
 
-
 if __name__ == '__main__':
     evaluator = PersonaMetrologyEvaluator()
 
@@ -146,5 +191,4 @@ if __name__ == '__main__':
     crs, cfdi, escrow = evaluator.execute_epistemic_collision_protocol(
         directives, actions, 0.0001, 0.0001000001
     )
-
     print(f"CRS: {crs}, CFDI: {cfdi}, Escrow Triggered: {escrow}")
