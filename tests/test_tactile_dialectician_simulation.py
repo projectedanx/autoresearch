@@ -164,5 +164,37 @@ class TestTactileDialecticianV6Evaluator(unittest.TestCase):
             "[⊘] Mutually exclusive requirements")
 
 
+
+    def test_separable_grid_parse(self):
+        from tactile_dialectician_simulation import SeparableGridParse
+        grid_parse = SeparableGridParse()
+        error_context = {
+            "variables": {"x": 5, "y": None},
+            "state": "pending",
+            "side_effects": ["database_write_failed"]
+        }
+        parsed_grid = grid_parse.isolate(error_context)
+        self.assertEqual(parsed_grid["isolated_variables"]["x"], 5)
+        self.assertIsNone(parsed_grid["isolated_variables"]["y"])
+        self.assertEqual(parsed_grid["isolated_state"], "pending")
+        self.assertIn("database_write_failed", parsed_grid["isolated_side_effects"])
+        self.assertTrue(grid_parse.is_parsed)
+
+    def test_recursive_debridement_protocol(self):
+        from tactile_dialectician_simulation import RecursiveDebridementProtocol, EpistemicEscrow
+        escrow = EpistemicEscrow()
+        protocol = RecursiveDebridementProtocol(escrow)
+
+        # Test basic resolution
+        status = protocol.resolve("Module_A", "Initial failure")
+        self.assertEqual(status, "Debrided")
+
+        # Test Betti-1 Loop detection (same failure twice)
+        protocol.resolve("Module_B", "Recurring failure")
+        status_loop = protocol.resolve("Module_B", "Recurring failure")
+        self.assertEqual(status_loop, "Quarantined")
+        self.assertIn("Module_B", escrow.quarantined_modules)
+        self.assertTrue("[⊘]" in escrow.quarantined_modules["Module_B"])
+
 if __name__ == '__main__':
     unittest.main()
