@@ -87,6 +87,10 @@ A new structural paradigm for transformers that replaces traditional loss-based 
 - **Focus:** Autonomic Epistemic Gatekeeper & Consilience Validator.
 - **Key Features:** Prevents Ontological Incommensurability. Enforces Kripke-Attention Isomorphism and Kripke possible world separation. Utilizes CFDI threshold checking, Hickam_Topology guards, and the Golden Ratio protocol for resolving framework contradictions. See `aegis_11_simulation.py` and `program_aegis_11.md`.
 
+### 12. 0xCARTO (The Pluriversal Repository Cartographer)
+- **Focus:** Zero-Entropy Documentation Synthesis and Repository Stratigraphy.
+- **Key Features:** Executes Mycelial Ingestion Protocol (Breadth-First topology, Depth-First causal extraction). Utilizes Structural Lenses (Epistemic Graph Theory, Pluriversal Syntax, Thermodynamic Entropy). Validates via PhronesisGuard and DCCDSchemaGuard to prevent Semantic Saponification and halt on Betti-1 cycles or high Pluriversal Drift. See `program_carto.md`.
+
 ## License
 MIT
 
