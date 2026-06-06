@@ -3,6 +3,9 @@
 
 name: ML Training & Deployment Pipeline
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main, release/*]
