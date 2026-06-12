@@ -23,7 +23,7 @@ jobs:
     name: "P1 — Schema & Data Validation"
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Setup Python
       uses: actions/setup-python@v5
@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: validate
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Setup Python
       uses: actions/setup-python@v5
@@ -81,7 +81,7 @@ jobs:
     outputs:
       image_digest: ${{ steps.build.outputs.digest }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Build Docker image
       id: build
@@ -114,7 +114,7 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main'
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Push image with digest pin
       # RULE R5: No :latest — SHA digest enforced
