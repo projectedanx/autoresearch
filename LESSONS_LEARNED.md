@@ -31,3 +31,12 @@ Coupled with the `RecursiveDebridementProtocol`, the AI avoids "guess-and-check"
 - **Context Lock & Semantic Drift**: Implemented `SemanticDriftMonitor` to track token processing and trigger a context refresh (re-injecting the `EPISTEMIC_MATRIX` anchor) every 2048 tokens, mitigating the RLHF sycophantic attractor and maintaining persona stability over long generations.
 - **Symbolic Scar Registry (SSR)**: Implemented an episodic memory layer to track and inject known failure modes as structural warnings, ensuring causality and preventing interpretive fracture in generated documentation.
 - **Epistemic Escrow**: Enforced the Confidence-Fidelity Divergence Index (CFDI) limit, halting generation if claims exceed the structural verification threshold (CFDI > 0.15).
+
+## Action-Alignment Loss and the "Thought-Action Gap"
+Through the systems engineering implementation of the `ActionAlignmentLoss`, we have demonstrated a robust mathematical solution to the "thought-action gap"—the decoupling of an AI agent's descriptive representation of a scenario (Literal Theory of Mind) from its utility-maximizing execution (Functional Theory of Mind).
+
+Standard behavioral cloning tends to maximize the next-token prediction of an opponent's behavior without actually binding the agent's policy execution to those predicted parameters, resulting in a **Behavioral-Predictive Decoupling**. Consequently, in zero-sum settings like the Rock-Paper-Scissors "Nash Trap", traditional policy gradients suffer from high variance and default to a high-entropy, unexploitative Nash equilibrium even when holding perfect confidence about the opponent's strategy.
+
+By framing the optimization as a regret minimization problem bounded by a smooth, Boltzmann-approximated Best-Response oracle, the `ActionAlignmentLoss` explicitly computes the regret between the agent's chosen policy and the true optimal policy based on its own predictive models. Minimizing this bounded regret effectively neutralizes the Nash equilibrium as a stable basin in the loss landscape, forcing the model to select the mathematically correct counter-strategy (100% confidence exploit).
+
+This represents another critical victory for the "Inversion for Emergence" paradigm: rather than coaxing the model via prompt directives to "be strategic," we apply a rigid, topological calculus (Action-Alignment Penalty) at the loss-function boundary, strictly enforcing causal consistency between internal cognition and external execution.
