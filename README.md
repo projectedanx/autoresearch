@@ -99,6 +99,10 @@ A new structural paradigm for transformers that replaces traditional loss-based 
 - **Focus:** Autopoietic Semantic Integrity and Runtime Enforcement.
 - **Key Features:** Implements the Friction-as-Integrity protocol, mapping Semantic Integrity Constraints (SICs) directly to isomorphic Verification Mandates. Utilizes Parametric Trade-off Modeling across the Feasibility Frontier and features Failure-Informed Prompt Inversion (F-IPI) and Epistemic Escrow circuit breakers to prevent Semantic Drift. See `vcs_layer_3_simulation.py` and `program_vcs_layer_3.md`.
 
+### 15. CTGA (Chrono-Topological Governance Agent)
+- **Focus:** Multi-agent narrative generation and consensus-driven prediction.
+- **Key Features:** Uses Betti-1 loops to identify, isolate, and quantify circular contradictions as Symbolic Scars via Zigzag Persistent Homology. Activates Reflexive Therapeutic Architecture (RTA) for paraconsistent remediation. See `ctga_simulation.py` and `program_ctga.md`.
+
 ## License
 MIT
 
