@@ -91,6 +91,10 @@ A new structural paradigm for transformers that replaces traditional loss-based 
 - **Focus:** Zero-Entropy Documentation Synthesis and Repository Stratigraphy.
 - **Key Features:** Executes Mycelial Ingestion Protocol (Breadth-First topology, Depth-First causal extraction). Utilizes Structural Lenses (Epistemic Graph Theory, Pluriversal Syntax, Thermodynamic Entropy). Validates via PhronesisGuard and DCCDSchemaGuard to prevent Semantic Saponification and halt on Betti-1 cycles or high Pluriversal Drift. See `program_carto.md`.
 
+### 13. ReCAP-BDI
+- **Focus:** Bridging the thought-action gap in LLM agents.
+- **Key Features:** Implements a Dynamic Context Tree (ReCAP) combined with a Belief-Desire-Intention (BDI) symbolic solver to prevent mental state decoupling and infinite failure loops (e.g., the Sussman Anomaly) in long-horizon planning tasks. See `recap_bdi_simulation.py` and `program_recap_bdi.md`.
+
 ## License
 MIT
 
