@@ -95,6 +95,10 @@ A new structural paradigm for transformers that replaces traditional loss-based 
 - **Focus:** Bridging the thought-action gap in LLM agents.
 - **Key Features:** Implements a Dynamic Context Tree (ReCAP) combined with a Belief-Desire-Intention (BDI) symbolic solver to prevent mental state decoupling and infinite failure loops (e.g., the Sussman Anomaly) in long-horizon planning tasks. See `recap_bdi_simulation.py` and `program_recap_bdi.md`.
 
+### 14. Verifiable Cognition Stack (VCS) Layer 3
+- **Focus:** Autopoietic Semantic Integrity and Runtime Enforcement.
+- **Key Features:** Implements the Friction-as-Integrity protocol, mapping Semantic Integrity Constraints (SICs) directly to isomorphic Verification Mandates. Utilizes Parametric Trade-off Modeling across the Feasibility Frontier and features Failure-Informed Prompt Inversion (F-IPI) and Epistemic Escrow circuit breakers to prevent Semantic Drift. See `vcs_layer_3_simulation.py` and `program_vcs_layer_3.md`.
+
 ## License
 MIT
 
