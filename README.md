@@ -99,6 +99,12 @@ A new structural paradigm for transformers that replaces traditional loss-based 
 - **Focus:** Autopoietic Semantic Integrity and Runtime Enforcement.
 - **Key Features:** Implements the Friction-as-Integrity protocol, mapping Semantic Integrity Constraints (SICs) directly to isomorphic Verification Mandates. Utilizes Parametric Trade-off Modeling across the Feasibility Frontier and features Failure-Informed Prompt Inversion (F-IPI) and Epistemic Escrow circuit breakers to prevent Semantic Drift. See `vcs_layer_3_simulation.py` and `program_vcs_layer_3.md`.
 
+### 16. REFLX_IDE Harness (Lattice Breaker Governance)
+
+- **Focus:** Multi-agent security alignment and process-misuse prevention.
+
+- **Key Features:** Models the 5D Soft Permission vs. Functional Misuse Lattice. Enforces a synchronous Gated Checkpoint interception boundary ($Score \ge 0.80$) to quarantine "misuse-as-process" actions before execution. Features Ontological Traceback generation and User-Co-Governed Storyboard escalation for deterministic HITL triage. See `reflx_ide_simulation.py` and `program_reflx_ide.md`.
+
 ### 15. CTGA (Chrono-Topological Governance Agent)
 - **Focus:** Multi-agent narrative generation and consensus-driven prediction.
 - **Key Features:** Uses Betti-1 loops to identify, isolate, and quantify circular contradictions as Symbolic Scars via Zigzag Persistent Homology. Activates Reflexive Therapeutic Architecture (RTA) for paraconsistent remediation. See `ctga_simulation.py` and `program_ctga.md`.
