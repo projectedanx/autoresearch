@@ -1,6 +1,6 @@
 import torch
 import pytest
-from src.models.action_alignment import ActionAlignmentLoss
+from models.action_alignment import ActionAlignmentLoss
 
 # Rock, Paper, Scissors payoff matrix
 # R=0, P=1, S=2
