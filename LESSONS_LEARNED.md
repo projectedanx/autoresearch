@@ -56,3 +56,15 @@ The implementation of the `REFLX_IDE Harness` has proven the viability of non-Eu
 - By defining a **Gated Checkpoint** boundary (where Euclidean distance $misuse\_score \ge 0.80$ triggers interception), the system proactively pauses "misuse-as-process" behavior before destructive actions occur.
 - **Ontological Tracebacks** construct a semantic path of the failure, allowing human administrators to clearly interpret the context of the breach via a Visual Storyboard, rather than reading flat logs.
 - The use of **Parametric Trade-off Modeling** (Hierarchical Gating) solves the latency issue by running fast, low-cost heuristics during the Laminar Phase and only executing computationally heavy multidimensional evaluations during the Warning/Turbulent Phases.
+
+## The Epistemic Architecture of Scientific Laws (IVH)
+- Replaced natural language assumptions with **isomorphic formalizations** via the **Invariant Verification Harness (IVH)**.
+- Established the **Epistemic Hierarchy**, validating that **theories explain laws** rather than mature into them.
+- Integrated a programmatic 4-Pillar Pipeline:
+  1. **Anomaly Mining**: Structural screening against a $3\sigma$ threshold.
+  2. **Symbolic Equation Solver**: Formalized translations of vague descriptive patterns.
+  3. **Explanatory Graph Structurer**: AIC optimized generation of causal DAGs.
+  4. **Popperian Edge-Case Falsifier**: Asymptotic Modus Tollens falsifications preventing absolute invariance.
+- Integrated Occam's Razor computations tracking **Bayesian Information Criterion (BIC)** against parameter bloat.
+- Simulated the distinction between propositional fact gathering and understanding via **Fictive Principles** mapping idealized variables.
+- Designed a **De-Idealization Engine** to execute "Model Breaking", successfully detecting faulty abstractions.
