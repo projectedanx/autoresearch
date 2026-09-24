@@ -1,5 +1,5 @@
 import pytest
-from src.axiom_simulation import AxiomTopologyEvaluator
+from axiom_simulation import AxiomTopologyEvaluator
 
 
 def test_initial_state():
